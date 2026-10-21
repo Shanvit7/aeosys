@@ -1,8 +1,10 @@
 import { responseError } from "@/lib/server/api"
 import { getAudit } from "@/lib/server/audits/service"
+import { getSession, unauthorizedResponse } from "@/lib/server/auth"
 import { auditIdSchema } from "@/schemas/audit.schema"
 
-export const GET = async (_request: Request, context: { params: Promise<{ id: string }> }) => {
+export const GET = async (request: Request, context: { params: Promise<{ id: string }> }) => {
+  if (!(await getSession(request.headers))) return unauthorizedResponse()
   try {
     const { id } = await context.params
     const parsed = auditIdSchema.safeParse(id)

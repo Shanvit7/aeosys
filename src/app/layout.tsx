@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Aeosys — Page audit",
   description:
-    "Evidence-led SEO and answer-readiness review for one page, with source-linked findings and practical suggested edits.",
+    "Evidence-led SEO and answer-readiness review for a single page, with source-linked findings and practical suggested edits.",
 }
 
 const RootLayout = ({ children }: LayoutProps<"/">) => {

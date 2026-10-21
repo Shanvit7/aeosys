@@ -8,7 +8,7 @@ import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 const auditStages = [
   {
     id: "inspect",
-    title: "Start with one page.",
+    title: "Start with single page.",
     description: "We review the URL you submit for page-specific SEO and answer readiness.",
     Icon: ScanSearch,
   },
