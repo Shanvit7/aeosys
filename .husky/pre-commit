@@ -1,1 +1,6 @@
+#!/usr/bin/env sh
+set -e
+
 pnpm lint-staged
+pnpm lint
+pnpm doctor:staged --yes
