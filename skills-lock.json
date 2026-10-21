@@ -13,11 +13,29 @@
       "skillPath": "skills/ai-seo/SKILL.md",
       "computedHash": "d17bcf49642639b1978e59aee3f13a1a5c80198a56c3c33cb7aee34df7b79359"
     },
+    "better-auth-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "better-auth/best-practices/SKILL.md",
+      "computedHash": "0c30be0e118c2b7a0c4c57bd9e63bf110c7e420a79ec6ce7997153f3b1e066ee"
+    },
+    "better-auth-security-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "security/SKILL.md",
+      "computedHash": "7a230edf3a24ce18162cb4379f59b6a19b8d24ca04db530609d0f15cede556dc"
+    },
     "core-web-vitals": {
       "source": "addyosmani/web-quality-skills",
       "sourceType": "github",
       "skillPath": "skills/core-web-vitals/SKILL.md",
       "computedHash": "601b2cbb920fb0ea9814a3f11232d7883e1eb0923865218502ab1d73e9fc5172"
+    },
+    "email-and-password-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "better-auth/emailAndPassword/SKILL.md",
+      "computedHash": "863886759f729081e265941f4f72c503835d55a1f34f6d63cebe6571159fff4a"
     },
     "migrate-radix-to-base": {
       "source": "shadcn/ui",
@@ -43,11 +61,35 @@
       "skillPath": "skills/engineering/prototype/SKILL.md",
       "computedHash": "d3fc74689bd993e39c44bfae510d014eecffbeec2922764b065377fd1327c0f6"
     },
+    "react-call": {
+      "source": "desko27/react-call",
+      "sourceType": "github",
+      "skillPath": "skills/react-call/SKILL.md",
+      "computedHash": "81852b665736193af9d2fd420dbf1c5e9beffdf36f48c678b9985b3f3bd06ab5"
+    },
     "react-doctor": {
       "source": "millionco/react-doctor",
       "sourceType": "github",
       "skillPath": "skills/react-doctor/SKILL.md",
       "computedHash": "803447f3251d555207f8935893d4d2950243a2ac0b407a1c95c7755bb38433a3"
+    },
+    "remotion-best-practices": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/remotion-best-practices/SKILL.md",
+      "computedHash": "143f8dc846423565cdc507d96df65f56d71804da399796818b1f2906139f0133"
+    },
+    "remotion-create": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/remotion-create/SKILL.md",
+      "computedHash": "f1da9d4f2f7755849fcbee97ddf95b0da3abad37ef75b1c001790fc94c170bbb"
+    },
+    "remotion-render": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/remotion-render/SKILL.md",
+      "computedHash": "2ecc164c8fd4ee7353457f764a647382f435c0cdc7b7859792489858d49bf2c0"
     },
     "seo-audit": {
       "source": "coreyhaines31/marketingskills",
@@ -78,6 +120,12 @@
       "sourceType": "github",
       "skillPath": "skills/composition-patterns/SKILL.md",
       "computedHash": "f98931159fa9c7fed043bcd18a891a46dcf89ababa38df13a4c5b7b30dc0ce07"
+    },
+    "vercel-rate-limits": {
+      "source": "jeremylongshore/tons-of-skills-marketplace",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/vercel-rate-limits/SKILL.md",
+      "computedHash": "976625129c6dbe9e711268a4292a941dec689669443ffa2fb9602e65653c5578"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
