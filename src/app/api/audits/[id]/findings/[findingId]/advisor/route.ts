@@ -1,11 +1,13 @@
 import { getAdvisorChat, streamAdvisorMessage } from "@/lib/server/agents/advisor"
 import { parseJson, responseError } from "@/lib/server/api"
+import { getSession, unauthorizedResponse } from "@/lib/server/auth"
 import { advisorChatRequestSchema, auditIdSchema } from "@/schemas/audit.schema"
 
 export const GET = async (
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string; findingId: string }> },
 ) => {
+  if (!(await getSession(request.headers))) return unauthorizedResponse()
   try {
     const { id, findingId } = await context.params
     const parsed = auditIdSchema.safeParse(id)
@@ -26,6 +28,7 @@ export const POST = async (
   request: Request,
   context: { params: Promise<{ id: string; findingId: string }> },
 ) => {
+  if (!(await getSession(request.headers))) return unauthorizedResponse()
   try {
     const { id, findingId } = await context.params
     const parsed = auditIdSchema.safeParse(id)

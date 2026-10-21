@@ -1,3 +1,9 @@
 import { ApiReference } from "@scalar/nextjs-api-reference"
+import { getSession, unauthorizedResponse } from "@/lib/server/auth"
 
-export const GET = ApiReference({ url: "/api/openapi" })
+const apiReference = ApiReference({ url: "/api/openapi" })
+
+export const GET = async (request: Request) => {
+  if (!(await getSession(request.headers))) return unauthorizedResponse()
+  return apiReference()
+}

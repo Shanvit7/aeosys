@@ -1,5 +1,7 @@
 allowBuilds:
   '@google/genai': false
+  esbuild: true
+  better-sqlite3: set this to true or false
   cbor-extract: false
   protobufjs: false
   sharp: false

@@ -1,8 +1,10 @@
 import { parseJson, responseError } from "@/lib/server/api"
 import { createAudit } from "@/lib/server/audits/service"
+import { getSession, unauthorizedResponse } from "@/lib/server/auth"
 import { createAuditSchema } from "@/schemas/audit.schema"
 
 export const POST = async (request: Request) => {
+  if (!(await getSession(request.headers))) return unauthorizedResponse()
   try {
     const { url } = await parseJson(request, createAuditSchema)
     const audit = await createAudit(url)

@@ -219,7 +219,7 @@ const AuditCommandCenter = () => {
               <TextFlip />
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-              Get a focused SEO and answer-readiness review of one page.
+              Get a focused SEO and answer-readiness review of a single page.
             </p>
           </div>
           <ReviewForm

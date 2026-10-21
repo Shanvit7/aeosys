@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react"
 import Link from "next/link"
+import { SignOutButton } from "@/components/auth/sign-out-button"
 import { Button } from "@/components/ui/button"
 
 export const AuditHeader = () => (
@@ -28,6 +29,7 @@ export const AuditHeader = () => (
         Aeosys
       </Link>
       <div className="flex items-center gap-2 sm:gap-4">
+        <SignOutButton />
         <Button
           variant="ghost"
           size="sm"

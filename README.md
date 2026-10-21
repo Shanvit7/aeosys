@@ -49,8 +49,28 @@ Open [localhost:3000](http://localhost:3000).
 | `AGENT_BROWSER_SNAPSHOT_ID` | Clean Vercel Sandbox snapshot for rendered page inspection. |
 | `CRUX_API_KEY` | Optional real-user performance data; enable the Chrome UX Report API in the matching Google Cloud project. |
 | `AEOSYS_DURABLE_DB` | Optional local SQLite path; defaults to `.aeosys/audits.sqlite`. |
+| `DATABASE_URL` | Neon pooled PostgreSQL connection for Better Auth runtime traffic. |
+| `DATABASE_URL_UNPOOLED` | Neon direct connection used for auth schema migrations. |
+| `BETTER_AUTH_URL` | Public app origin, e.g. `https://aeosys.example.com`. |
+| `BETTER_AUTH_SECRET` | Random 32+ character Better Auth signing secret. |
+| `DEMO_EMAIL` / `DEMO_PASSWORD` | Seed-only credentials; password must be at least 12 characters. |
 
-Local SQLite storage must have one owning process. Keep credentials server-side and out of version control.
+Local audit SQLite storage must have one owning process. Keep credentials server-side and out of version control.
+
+### Demo access
+
+The app requires sign-in. Email/password registration is disabled; Better Auth rate-limits login attempts and stores sessions and rate limits in PostgreSQL. Create the database schema, then seed one verified demo account:
+
+```bash
+pnpm auth:migrate
+pnpm seed:demo
+```
+
+Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `DEMO_EMAIL`, and `DEMO_PASSWORD` in `.env.local` (and the deployment environment). Runtime uses the pooled Neon URL; migrations prefer the unpooled URL. Use a unique, high-entropy demo password and share it with recruiters out-of-band. Seeding is idempotent and does not reset an existing account's password. Do not commit credentials.
+
+Neon Managed Auth is provisioned with public sign-up disabled, but this app uses its existing self-managed Better Auth instance against Neon PostgreSQL so the seeded demo account remains app-managed.
+
+This initial demo uses one shared account and the existing audit store is not partitioned by user; signed-in visitors can see the same audit data. Add per-user data isolation before using this for private customer data.
 
 ### Browser setup
 
