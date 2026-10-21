@@ -19,7 +19,7 @@ import {
   type Tx,
 } from "@earendil-works/pi-durable"
 import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node"
-import { acquireHarness, resumeWith } from "durable-harness/pi-durable"
+import { acquireHarness, openWorldStorage, resumeWith } from "durable-harness/pi-durable"
 import { AuditAgentError, runAuditAgent } from "@/lib/server/agents/audit/agent"
 import { runAuditCommand } from "@/lib/server/agents/audit/browser"
 import {
@@ -34,6 +34,8 @@ import { analyzePage } from "@/lib/server/audits/analyzer"
 import { measureCoreWebVitals, measureLabCoreWebVitals } from "@/lib/server/audits/core-web-vitals"
 import { AuditNotFoundError, ProposalNotFoundError } from "@/lib/server/audits/errors"
 import { AuditFetchError, fetchPublicHtml } from "@/lib/server/audits/fetcher"
+import { getAuditSessionId } from "@/lib/server/audits/session"
+import { authPool } from "@/lib/server/auth"
 import { logger } from "@/lib/server/logger"
 import { type AuditResult, auditResultSchema } from "@/schemas/audit.schema"
 import { auditAgentReportJsonSchema } from "@/schemas/audit-agent.schema"
@@ -404,15 +406,30 @@ export const runtime = async () => {
       if (!current.storage.isFenced && !current.storage.closed) return current
       await current.release()
     }
-    const acquired = acquireHarness("aeosys-audits", openVercelAuditHarness, {
-      name: "aeosys-audits",
-      traceAudience: "private",
-    }).then(async (lease) => ({
-      ...lease,
-      ...(await withAuditRoot(lease.harness)),
-      release: lease.release,
-    }))
+    const acquired = (async () => {
+      const project = process.env.VERCEL_PROJECT_ID
+      const environment = process.env.VERCEL_TARGET_ENV ?? process.env.VERCEL_ENV
+      if (!project || !environment) throw new Error("Vercel project and environment are required")
+      const options = { name: "aeosys-audits", traceAudience: "private" as const }
+      const sessionId = await getAuditSessionId(authPool, `${project}:${environment}`, async () => {
+        const storage = await openWorldStorage(undefined, options)
+        await storage.close(BACKGROUND_CONTEXT)
+        return storage.sessionId
+      })
+      const lease = await acquireHarness(sessionId, openVercelAuditHarness, options)
+      try {
+        return { ...lease, ...(await withAuditRoot(lease.harness)) }
+      } catch (error) {
+        await lease.release()
+        throw error
+      }
+    })()
     globalForAudits.aeosysVercelAuditRuntime = acquired
+    void acquired.catch(() => {
+      if (globalForAudits.aeosysVercelAuditRuntime === acquired) {
+        globalForAudits.aeosysVercelAuditRuntime = undefined
+      }
+    })
     const current = await acquired
     current.harness.resume()
     return current
