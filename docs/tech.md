@@ -108,7 +108,11 @@ The opened harness is cached on `globalThis` and resumed. This is local filesyst
 
 ### Vercel
 
-With `VERCEL` set, `resumeWith` and `acquireHarness` integrate the same harness with Vercel Workflow World. Leases are cached and checked for fenced/closed storage; an unusable lease is released and reacquired. Traces are configured with `traceAudience: "private"`. This is the source-wired production path, not proof of a successful deployed run.
+With `VERCEL` set, `resumeWith` and `acquireHarness` integrate the same harness with Vercel Workflow World. `aeosys-audits` is the workflow name, not a session ID: sessions must be created by the SDK and identified by their returned `wrun_…` ID.
+
+On first use, the app creates `aeosys_workflow_sessions` in the existing PostgreSQL database and stores one generated session ID per Vercel project/environment. A transaction-scoped advisory lock serializes bootstrap, so concurrent cold starts reuse the same session. The database role needs permission to create this table on initial deployment. Keep this mapping: deleting it disconnects the app from its existing audit reports. Production and Preview use distinct mappings, even when sharing a database.
+
+Leases are cached and checked for fenced/closed storage; an unusable lease is released and reacquired. Failed initialization is evicted from the cache so later requests can retry. Traces are configured with `traceAudience: "private"`. This is the source-wired production path, not proof of a successful deployed run.
 
 ### Documents
 
