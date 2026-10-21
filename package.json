@@ -12,7 +12,7 @@
     "lint:biome": "biome check .",
     "lint:ui": "oxlint --ignore-pattern '**/.agents/**'",
     "format": "biome check --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "knip": "knip",
     "test:login": "tsx scripts/test-login.ts",
     "test:agent": "tsx --test src/lib/server/audit-agent/agent.test.ts",
