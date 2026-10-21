@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Aeosys</title>
+  <defs>
+    <mask id="stripes" maskUnits="userSpaceOnUse">
+      <path fill="white" d="M0 0h32v32H0z" />
+      <path fill="black" d="M12 9.5h8V11h-8zm-2.5 5.5h13v1.5h-13zm-3 6h19v1.5h-19z" />
+    </mask>
+  </defs>
+  <path
+    fill="oklch(72% 0.165 48)"
+    fill-rule="evenodd"
+    mask="url(#stripes)"
+    d="M15 3h2l13 26h-7l-3-6H12l-3 6H2L15 3Zm1 7-4 9h8l-4-9Z"
+  />
+</svg>

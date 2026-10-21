@@ -1,0 +1,6 @@
+allowBuilds:
+  '@google/genai': false
+  cbor-extract: false
+  protobufjs: false
+  sharp: false
+  unrs-resolver: false
