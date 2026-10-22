@@ -15,7 +15,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "knip": "knip",
     "test:login": "tsx scripts/test-login.ts",
-    "test:agent": "tsx --test src/lib/server/audit-agent/agent.test.ts",
+    "test:agent": "tsx --conditions=import --test src/lib/server/agents/audit/agent.test.ts",
     "test:fetcher": "tsx --test src/lib/server/audits/fetcher.test.ts",
     "test:cwv": "tsx --test src/lib/server/audits/core-web-vitals.test.ts",
     "doctor": "react-doctor",
