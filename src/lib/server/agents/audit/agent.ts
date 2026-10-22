@@ -116,6 +116,14 @@ export const runAuditAgent = async <I, S, R, H extends object>(
       throw new AuditAgentError("timeout", true, "Audit agent timed out", { cause: error })
     }
     if (settled.status !== "done") {
+      const detail = typeof settled.detail === "string" ? settled.detail : undefined
+      const apiKey = process.env.GEMINI_API_KEY
+      logger.error("Audit agent submission failed", {
+        auditId,
+        attempt,
+        reason: settled.reason,
+        detail: (apiKey ? detail?.replaceAll(apiKey, "[REDACTED]") : detail)?.slice(0, 2_000),
+      })
       const retryable = settled.reason === "model_error"
       throw new AuditAgentError(
         retryable ? "model_error" : "agent_failed",
