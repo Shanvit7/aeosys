@@ -1,13 +1,15 @@
 "use client"
 
-import { ArrowRight, CircleAlert, LoaderCircle } from "lucide-react"
+import { ArrowRight, ArrowUpRight, CircleAlert, LoaderCircle } from "lucide-react"
 import dynamic from "next/dynamic"
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 import type { FindingFilter } from "@/components/audit-command-center/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAudit, useCreateAudit } from "@/hooks/use-audits"
+import { auditedPageUrls } from "@/lib/audits/coverage"
 import { cn } from "@/lib/utils"
 import type { AuditFinding, AuditResult } from "@/schemas/audit.schema"
 import Spinner from "./animata/progress/spinner"
@@ -51,7 +53,7 @@ const ReviewForm = ({
     >
       <label
         htmlFor="audit-url"
-        className="text-xs font-medium text-muted-foreground sm:col-span-2"
+        className="text-sm font-medium text-muted-foreground sm:col-span-2"
       >
         Enter a page URL
       </label>
@@ -124,7 +126,7 @@ const AuditRunning = ({ url }: { url: string }) => (
       <Spinner className="m-0" outerSize="size-10" childSize="size-7" />
     </span>
     <div className="min-w-0">
-      <p className="text-sm font-medium">AI is reviewing this page…</p>
+      <p className="text-sm font-medium">Reviewing this page…</p>
       <p className="break-all text-sm text-muted-foreground">{url}</p>
     </div>
   </div>
@@ -141,48 +143,20 @@ const AuditReport = ({
   onFilterChange: (filter: FindingFilter | null) => void
   onSelect: (finding: AuditFinding) => void
 }) => {
-  if (audit.status === "failed") {
-    return (
-      <Alert variant="destructive">
-        <CircleAlert aria-hidden="true" />
-        <AlertTitle>We couldn’t finish reviewing this page</AlertTitle>
-        <AlertDescription>
-          Check that the page opens in your browser, then try again.
-        </AlertDescription>
-      </Alert>
-    )
-  }
+  if (audit.status === "failed") return null
 
   return (
     <>
-      {audit.status === "partial" && (
-        <Alert
-          role="status"
-          className="border-warning/50 bg-warning/10 text-foreground [&>svg]:text-warning"
-        >
-          <CircleAlert aria-hidden="true" />
-          <AlertTitle>Page review is incomplete</AlertTitle>
-          <AlertDescription>
-            {audit.coverage?.limitations[0] ??
-              "AI review failed; findings come from automated checks of the page’s HTML only."}
-          </AlertDescription>
-        </Alert>
-      )}
       <SeveritySummary audit={audit} />
       <AuditMetrics audit={audit} filter={filter} onFilterChange={onFilterChange} />
       {audit.mode === "demo" && (
         <Alert role="status">
           <CircleAlert aria-hidden="true" />
           <AlertTitle>Preview report</AlertTitle>
-          <AlertDescription>This is an example, not a check of your live website.</AlertDescription>
+          <AlertDescription>This is an example, not a check of your live page.</AlertDescription>
         </Alert>
       )}
-      <Findings
-        audit={audit}
-        filter={filter}
-        onClearFilter={() => onFilterChange(null)}
-        onSelect={onSelect}
-      />
+      <Findings audit={audit} filter={filter} onSelect={onSelect} />
     </>
   )
 }
@@ -195,6 +169,53 @@ const AuditCommandCenter = () => {
   const createAudit = useCreateAudit()
   const auditQuery = useAudit(activeAuditId)
   const audit = auditQuery.data
+  const notifiedAuditId = useRef<string | null>(null)
+  useEffect(() => {
+    if (
+      !audit ||
+      audit.status === "queued" ||
+      audit.status === "running" ||
+      notifiedAuditId.current === audit.auditId
+    ) {
+      return
+    }
+    notifiedAuditId.current = audit.auditId
+    const pages = auditedPageUrls(audit.coverage?.inspectedUrls ?? [])
+    const title =
+      audit.status === "failed"
+        ? "Page review failed"
+        : audit.status === "partial"
+          ? "Page review is incomplete"
+          : "Page review complete"
+    const description = (
+      <div className="grid min-w-0 gap-2">
+        {pages.map((pageUrl) => {
+          const parsedUrl = new URL(pageUrl)
+          const pageLabel = `${parsedUrl.host}${parsedUrl.pathname === "/" ? "" : parsedUrl.pathname}`
+
+          return (
+            <a
+              key={pageUrl}
+              href={pageUrl}
+              target="_blank"
+              rel="noreferrer"
+              title={pageUrl}
+              aria-label={`Open reviewed page: ${pageUrl}`}
+              className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-md border border-border/70 bg-muted/40 px-2 py-1 text-xs text-muted-foreground no-underline transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="truncate">{pageLabel}</span>
+              <ArrowUpRight aria-hidden="true" className="size-3 shrink-0" />
+            </a>
+          )
+        })}
+        {audit.error && <span className="text-xs">{audit.error.message}</span>}
+      </div>
+    )
+    const options = { description, duration: 5_000 }
+    if (audit.status === "failed") toast.error(title, options)
+    else if (audit.status === "partial") toast.warning(title, options)
+    else toast.success(title, options)
+  }, [audit])
   const isActive = audit?.status === "queued" || audit?.status === "running"
   const isLoading = createAudit.isPending || (Boolean(activeAuditId) && auditQuery.isPending)
   const isBusy = isLoading || isActive
@@ -217,20 +238,16 @@ const AuditCommandCenter = () => {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,oklch(72%_0.165_48/0.12),transparent_55%)]"
       />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(oklch(72%_0.165_48/0.13)_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_at_center,black,transparent_72%)]"
-      />
       <AuditHeader />
-      <main className="mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col gap-7 px-4 py-8 sm:px-8 sm:py-10">
-        <section className="grid shrink-0 animate-in fade-in slide-in-from-bottom-2 gap-6 border-b border-border/50 pb-7 duration-500 lg:grid-cols-[minmax(0,0.95fr)_minmax(25rem,1.05fr)] lg:items-end">
+      <main className="mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:gap-7 sm:px-8 sm:py-9">
+        <section className="grid shrink-0 animate-in fade-in slide-in-from-bottom-2 gap-5 border-b border-border/50 pb-6 duration-500 sm:gap-6 sm:pb-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(25rem,1.05fr)] lg:items-end">
           <div className="max-w-xl">
-            <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+            <h1 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.035em] text-balance sm:text-4xl">
               <span className="block">Improve this page’s</span>
               <TextFlip />
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-              Get a focused SEO and answer-readiness review of a single page.
+              Get a focused SEO and answer-readiness review of one submitted page.
             </p>
           </div>
           <ReviewForm

@@ -5,7 +5,7 @@ import { Sandbox } from "@vercel/sandbox"
 import { blockedNetworkRanges, validatePublicUrl } from "@/lib/server/audits/fetcher"
 import { logger } from "@/lib/server/logger"
 
-export const AUDIT_BROWSER_TIMEOUT_MS = 55_000
+const AUDIT_BROWSER_TIMEOUT_MS = 55_000
 const sandboxName = (conversationId: ConversationId) =>
   `aeosys-${createHash("sha256").update(String(conversationId)).digest("hex").slice(0, 32)}`
 
@@ -78,14 +78,4 @@ export const runAuditCommand = async (
     })
     throw error
   }
-}
-
-export const stopAuditBrowser = async (conversationId: ConversationId) => {
-  const signal = AbortSignal.timeout(10_000)
-  const sandbox = await Sandbox.get({
-    ...getSandboxCredentials(),
-    name: sandboxName(conversationId),
-    signal,
-  })
-  await sandbox.stop({ signal })
 }

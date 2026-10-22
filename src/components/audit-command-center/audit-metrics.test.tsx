@@ -50,6 +50,10 @@ test("overview shows Core Web Vitals in place of category card", () => {
     html,
     /aria-pressed="true" aria-controls="audit-findings" aria-label="Important: 1 finding"/,
   )
+  assert.match(html, /Clear filter/)
+  assert.doesNotMatch(html, /Worth a look · 1 finding/)
+  assert.match(html, /<button[^>]*>[\s\S]*?Clear filter[\s\S]*?<\/button>/)
+  assert.doesNotMatch(html, /Jump to findings/)
   assert.doesNotMatch(html, /Page reviewed|submitted page|content could not be reviewed/)
   assert.match(html, /Core Web Vitals/)
   assert.match(html, /Largest contentful paint: —; No data/)
@@ -113,17 +117,13 @@ test("priority and area filters narrow findings without losing total counts", ()
     { field: "severity", value: "high" },
     { field: "category", value: "metadata" },
   ] as const) {
-    const html = renderToStaticMarkup(
-      <Findings audit={audit} filter={filter} onClearFilter={noop} onSelect={noop} />,
-    )
+    const html = renderToStaticMarkup(<Findings audit={audit} filter={filter} onSelect={noop} />)
     assert.match(html, /Missing description/)
     assert.doesNotMatch(html, /Heading order/)
-    assert.match(html, /Clear filter/)
+    assert.doesNotMatch(html, /Clear filter/)
     assert.match(html, /1 of 2/)
   }
-  const all = renderToStaticMarkup(
-    <Findings audit={audit} filter={null} onClearFilter={noop} onSelect={noop} />,
-  )
+  const all = renderToStaticMarkup(<Findings audit={audit} filter={null} onSelect={noop} />)
   assert.match(all, /Missing description/)
   assert.match(all, /Heading order/)
   const empty = renderToStaticMarkup(

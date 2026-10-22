@@ -54,15 +54,15 @@ const LoginPage = () => {
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 [@media(max-height:680px)]:hidden">
         <div className="flex items-center gap-2.5 text-xl font-semibold tracking-tight">
           <Image src="/icon.svg" alt="" width={32} height={32} priority />
-          Aeosys<span className="text-primary">.</span>
+          Aeosys
         </div>
         <span className="hidden font-mono text-xs tracking-widest text-muted-foreground uppercase sm:inline">
           SEO + AI readiness
         </span>
       </header>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 items-center py-3 [@media(max-height:680px)]:py-0">
-        <div className="grid w-full overflow-hidden rounded-3xl border border-border/70 bg-card p-1.5 sm:rounded-4xl sm:p-2 lg:grid-cols-2">
+      <div className="mx-auto flex w-full flex-1 items-center justify-center py-8 [@media(max-height:680px)]:py-2">
+        <div className="grid w-full max-w-md overflow-hidden rounded-3xl border border-border/70 bg-card p-1.5 sm:rounded-4xl sm:p-2 lg:max-w-5xl lg:grid-cols-2">
           <section
             aria-labelledby="walkthrough-heading"
             className="relative hidden min-w-0 flex-col justify-between gap-5 overflow-hidden rounded-3xl bg-secondary/35 p-6 lg:flex xl:p-8 [@media(max-height:680px)]:hidden"
@@ -85,18 +85,21 @@ const LoginPage = () => {
 
           <section
             aria-labelledby="login-heading"
-            className="flex min-w-0 flex-col justify-center rounded-2xl bg-background px-4 py-5 sm:rounded-3xl sm:px-12 sm:py-8 lg:px-8 xl:px-12 [@media(max-height:680px)]:py-4"
+            className="relative flex min-w-0 flex-col justify-center overflow-hidden rounded-2xl bg-background px-5 py-7 sm:rounded-3xl sm:px-8 sm:py-9 lg:px-8 xl:px-12 [@media(max-height:680px)]:py-4"
           >
-            <div className="mx-auto flex w-full max-w-sm flex-col">
-              <div className="mb-4 flex size-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary sm:mb-6 [@media(max-height:680px)]:hidden">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-32 right-24 size-72 rounded-full bg-primary/10 blur-3xl"
+            />
+            <div className="relative mx-auto flex w-full max-w-sm flex-col">
+              <div className="mb-5 flex size-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary [@media(max-height:680px)]:hidden">
                 <LockKeyhole aria-hidden="true" className="size-5" strokeWidth={1.5} />
               </div>
-              <h1 id="login-heading" className="text-3xl font-medium tracking-tight">
+              <h1 id="login-heading" className="text-3xl font-semibold tracking-tight">
                 Sign in
               </h1>
-
               <form
-                className="mt-5 sm:mt-7 [@media(max-height:680px)]:mt-3"
+                className="mt-6 sm:mt-7 [@media(max-height:680px)]:mt-3"
                 onSubmit={submit}
                 aria-label="Sign in"
                 aria-busy={pending}
@@ -169,7 +172,7 @@ const LoginPage = () => {
                 </FieldGroup>
               </form>
 
-              <p className="pt-4 text-xs text-muted-foreground sm:pt-6 [@media(max-height:680px)]:hidden">
+              <p className="pt-5 text-sm leading-6 text-muted-foreground sm:pt-6 [@media(max-height:680px)]:hidden">
                 For demo access, feel free to reach out to{" "}
                 <a className="underline underline-offset-4" href="mailto:shanvit7@gmail.com">
                   shanvit7@gmail.com

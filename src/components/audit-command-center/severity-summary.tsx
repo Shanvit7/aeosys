@@ -12,7 +12,6 @@ export const SeveritySummary = ({ audit }: { audit: AuditResult }) => {
     {
       label: "What we found",
       value: audit.findings.length,
-      detail: audit.coverage?.inspectedUrls.length ? "on this page" : "in this audit",
       icon: ScanSearch,
     },
     { label: "High priority", value: highPriority, detail: "start here", icon: CircleAlert },
@@ -38,7 +37,7 @@ export const SeveritySummary = ({ audit }: { audit: AuditResult }) => {
                 targetValue={value}
                 className="mt-1 text-3xl font-semibold tabular-nums tracking-tight"
               />
-              <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+              {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
             </div>
             <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
           </div>

@@ -58,6 +58,19 @@ const PRESS_SPRING: Transition = {
 }
 
 const PRESS_SCALE_FACTOR = 0.985
+const SWIPE_THRESHOLD = 48
+const SWIPE_AXIS_RATIO = 1.2
+
+export const isHorizontalCardSwipe = (
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) => {
+  const deltaX = end.x - start.x
+  const deltaY = end.y - start.y
+  return (
+    Math.abs(deltaX) >= SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY) * SWIPE_AXIS_RATIO
+  )
+}
 
 const THROW_SPRING: Transition = {
   type: "spring",
@@ -520,9 +533,49 @@ const CardStackTrigger = ({
   )
 }
 
-const CardStackViewport = ({ className, children, ...props }: ComponentProps<"div">) => {
+const CardStackViewport = ({
+  swipeable = false,
+  className,
+  children,
+  onPointerDown,
+  onPointerUp,
+  onPointerCancel,
+  ...props
+}: ComponentProps<"div"> & { swipeable?: boolean }) => {
+  const { advance } = useCardStack()
+  const swipeStart = useRef<{ pointerId: number; x: number; y: number } | null>(null)
+
   return (
-    <div className={cn("relative w-full overflow-visible", className)} {...props}>
+    <div
+      {...props}
+      className={cn("relative w-full overflow-visible", swipeable && "touch-pan-y", className)}
+      onPointerDown={(event) => {
+        onPointerDown?.(event)
+        if (
+          !swipeable ||
+          event.defaultPrevented ||
+          !event.isPrimary ||
+          event.pointerType === "mouse" ||
+          (event.target instanceof Element && event.target.closest("button") !== null)
+        ) {
+          return
+        }
+        swipeStart.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+        event.currentTarget.setPointerCapture(event.pointerId)
+      }}
+      onPointerUp={(event) => {
+        onPointerUp?.(event)
+        const start = swipeStart.current
+        swipeStart.current = null
+        if (!start || start.pointerId !== event.pointerId) return
+
+        if (isHorizontalCardSwipe(start, { x: event.clientX, y: event.clientY })) advance()
+      }}
+      onPointerCancel={(event) => {
+        onPointerCancel?.(event)
+        swipeStart.current = null
+      }}
+    >
       {children}
     </div>
   )

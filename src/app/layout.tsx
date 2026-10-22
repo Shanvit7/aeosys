@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Providers } from "@/components/providers"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Aeosys — Page audit",
   description:
-    "Evidence-led SEO and answer-readiness review for a single page, with source-linked findings and practical suggested edits.",
+    "Evidence-led SEO and answer-readiness review of one submitted page, with source-linked findings and practical suggested edits.",
 }
 
 const RootLayout = ({ children }: LayoutProps<"/">) => {
@@ -25,8 +26,9 @@ const RootLayout = ({ children }: LayoutProps<"/">) => {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-dvh flex flex-col">
         <Providers>{children}</Providers>
+        <Toaster position="bottom-right" />
       </body>
     </html>
   )

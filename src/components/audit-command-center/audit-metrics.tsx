@@ -1,8 +1,10 @@
 "use client"
 
+import { X } from "lucide-react"
 import BarChart from "@/components/animata/graphs/bar-chart"
 import GaugeChart from "@/components/animata/progress/gauge-chart"
 import { type FindingFilter, severityLabel } from "@/components/audit-command-center/utils"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { AuditFinding, AuditResult } from "@/schemas/audit.schema"
@@ -152,22 +154,29 @@ export const AuditMetrics = ({
   return (
     <section aria-label="Audit overview" className="grid gap-4 lg:grid-cols-2">
       <Card>
-        <CardHeader className="mt-2">
+        <CardHeader
+          className={
+            filter ? "mt-2 flex flex-row flex-wrap items-center justify-between gap-3" : "mt-2"
+          }
+        >
           <CardTitle>
-            <h2>Where to start</h2>
+            <h2>Findings by priority</h2>
           </CardTitle>
-          <p className="text-xs leading-5 text-muted-foreground">
-            {filter?.field === "severity" ? (
-              <a
-                href="#audit-findings"
-                className="text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                View {severityLabel(filter.value).toLowerCase()} findings →
-              </a>
-            ) : (
-              "Choose a priority to focus your findings."
-            )}
-          </p>
+          {filter ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="min-h-11 rounded-full px-3 sm:min-h-10"
+              onClick={() => onFilterChange(null)}
+            >
+              <X aria-hidden="true" className="size-4" />
+              Clear filter
+            </Button>
+          ) : (
+            <p className="text-sm leading-6 text-muted-foreground">
+              Select a priority to filter the list below.
+            </p>
+          )}
         </CardHeader>
         <CardContent className="mt-4 mb-2">
           {audit.findings.length ? (
