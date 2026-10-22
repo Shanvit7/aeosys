@@ -183,6 +183,7 @@ const LoginWalkthrough = () => {
   return (
     <div className="overflow-hidden rounded-2xl border border-border/70 shadow-2xl">
       <Player
+        acknowledgeRemotionLicense
         key={String(reducedMotion)}
         component={Walkthrough}
         durationInFrames={540}

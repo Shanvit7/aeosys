@@ -1,4 +1,5 @@
 import dotenv from "dotenv"
+import { logger } from "@/lib/server/logger"
 
 dotenv.config({ path: ".env.local" })
 
@@ -14,7 +15,7 @@ const seedDemo = async () => {
   const context = await auth.$context
   const existing = await context.internalAdapter.findUserByEmail(email)
   if (existing) {
-    console.log(`Demo account already exists: ${email}`)
+    logger.info("Demo account already exists", { email })
   } else {
     const hashedPassword = await context.password.hash(password)
     const user = await context.internalAdapter.createUser(
@@ -28,13 +29,13 @@ const seedDemo = async () => {
       accountId: user.id,
       password: hashedPassword,
     })
-    console.log(`Created demo account: ${email}`)
+    logger.info("Created demo account", { email })
   }
 
   await authPool.end()
 }
 
 void seedDemo().catch((error: unknown) => {
-  console.error(error)
+  logger.error("Demo account seeding failed", { error })
   process.exitCode = 1
 })
