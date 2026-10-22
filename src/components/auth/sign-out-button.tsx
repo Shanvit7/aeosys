@@ -2,7 +2,7 @@
 
 import { LoaderCircle, LogOut, UserRound } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useRef, useState } from "react"
+import { useRef, useState, useTransition } from "react"
 import { createCallable, type UserComponent } from "react-call"
 import {
   AlertDialog,
@@ -84,15 +84,22 @@ const ConfirmSignOut = createCallable(ConfirmSignOutContent)
 
 export const SignOutButton = () => {
   const router = useRouter()
+  const pending = useRef(false)
+  const [isNavigationPending, startNavigation] = useTransition()
   const signOut = async () => {
-    if (!(await ConfirmSignOut.call({}))) return
-    router.replace("/login")
-    router.refresh()
+    if (pending.current || !(await ConfirmSignOut.call({}))) return
+    pending.current = true
+    startNavigation(() => {
+      router.replace("/login")
+      router.refresh()
+    })
   }
 
   return (
     <>
       <SpeedDial
+        aria-busy={isNavigationPending}
+        className={isNavigationPending ? "pointer-events-none opacity-60" : undefined}
         direction="right"
         triggerLabel="Open account menu"
         triggerIcon={<UserRound aria-hidden="true" className="size-5" />}
@@ -101,7 +108,11 @@ export const SignOutButton = () => {
           {
             key: "sign-out",
             label: "Sign out",
-            icon: <LogOut aria-hidden="true" />,
+            icon: isNavigationPending ? (
+              <LoaderCircle aria-hidden="true" className="animate-spin" />
+            ) : (
+              <LogOut aria-hidden="true" />
+            ),
             action: () => void signOut(),
           },
         ]}
