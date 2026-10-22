@@ -3,7 +3,7 @@ import Spinner from "@/components/animata/progress/spinner"
 const PublicLoading = () => (
   <main
     aria-busy="true"
-    className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-background px-4"
+    className="fixed inset-0 z-50 flex min-h-dvh w-full flex-col items-center justify-center gap-6 bg-background px-4"
   >
     <div className="flex items-center gap-2.5 text-xl font-semibold tracking-tight">
       <span>

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
 import test from "node:test"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
@@ -44,5 +45,56 @@ test("unauthenticated requests show public loading, then redirect to login", asy
     assert.doesNotMatch(shell, /An error occurred while attempting to validate instant UI/)
   } finally {
     await reader.cancel()
+  }
+})
+
+test("public loading covers the viewport even inside a constrained layout", () => {
+  const session = execFileSync(
+    "agent-browser",
+    ["session", "id", "--scope", "worktree", "--prefix", "route-loading"],
+    { encoding: "utf8" },
+  ).trim()
+  const browser = (...args: string[]) =>
+    execFileSync("agent-browser", args, {
+      encoding: "utf8",
+      env: { ...process.env, AGENT_BROWSER_SESSION: session, AGENT_BROWSER_RESTORE: session },
+    }).trim()
+
+  try {
+    browser("open", `${process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}/login`)
+    browser("wait", "#email")
+    browser("set", "media", "dark", "reduced-motion")
+    browser(
+      "eval",
+      `(() => {
+        const host = document.createElement('div')
+        host.style.cssText = 'width: 16rem; margin: 2rem auto; padding: 1rem'
+        host.innerHTML = ${JSON.stringify(publicMarkup)}
+        document.body.replaceChildren(host)
+      })()`,
+    )
+    for (const [width, height] of [
+      [375, 812],
+      [1440, 1000],
+      [812, 375],
+    ]) {
+      browser("set", "viewport", String(width), String(height))
+      assert.equal(
+        browser(
+          "eval",
+          `(() => {
+          const main = document.querySelector('main')
+          const rect = main.getBoundingClientRect()
+          return rect.x === 0 && rect.y === 0 && rect.width === innerWidth &&
+            rect.height === innerHeight && document.documentElement.scrollWidth <= innerWidth &&
+            getComputedStyle(main).backgroundColor === getComputedStyle(document.body).backgroundColor
+        })()`,
+        ),
+        "true",
+        `Loading must fill ${width}×${height}, not its narrow padded parent`,
+      )
+    }
+  } finally {
+    browser("close")
   }
 })
