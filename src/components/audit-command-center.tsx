@@ -212,7 +212,15 @@ const AuditCommandCenter = () => {
   }
 
   return (
-    <div className="flex min-h-dvh min-w-0 flex-col bg-background">
+    <div className="relative isolate flex min-h-dvh w-full min-w-0 flex-col bg-background">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,oklch(72%_0.165_48/0.12),transparent_55%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(oklch(72%_0.165_48/0.13)_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_at_center,black,transparent_72%)]"
+      />
       <AuditHeader />
       <main className="mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col gap-7 px-4 py-8 sm:px-8 sm:py-10">
         <section className="grid shrink-0 animate-in fade-in slide-in-from-bottom-2 gap-6 border-b border-border/50 pb-7 duration-500 lg:grid-cols-[minmax(0,0.95fr)_minmax(25rem,1.05fr)] lg:items-end">
@@ -236,15 +244,7 @@ const AuditCommandCenter = () => {
         </section>
 
         {(!audit || isBusy) && (
-          <div className="relative isolate grid min-h-[clamp(30rem,62dvh,44rem)] flex-1 place-items-center overflow-hidden">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,oklch(72%_0.165_48/0.12),transparent_55%)]"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(oklch(72%_0.165_48/0.13)_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_at_center,black,transparent_72%)]"
-            />
+          <div className="grid min-h-[clamp(30rem,62dvh,44rem)] flex-1 place-items-center overflow-hidden">
             {isBusy ? (
               <AuditRunning url={createAudit.isPending ? url : (audit?.url ?? url)} />
             ) : (

@@ -19,6 +19,17 @@ const browser = (...args: string[]) =>
     env: { ...process.env, AGENT_BROWSER_SESSION: session, AGENT_BROWSER_RESTORE: session },
   }).trim()
 const check = (expression: string) => assert.equal(browser("eval", expression), "true", expression)
+const checkBackdrop = () =>
+  check(`(() => {
+    const page = document.querySelector('main').parentElement
+    const bounds = page.getBoundingClientRect()
+    const layers = [...page.children].filter(el => el.getAttribute('aria-hidden') === 'true')
+    return layers.length === 2 && layers.every(el => {
+      const rect = el.getBoundingClientRect()
+      return rect.left === 0 && rect.width === document.documentElement.clientWidth &&
+        rect.top === bounds.top && rect.height === bounds.height && rect.height >= innerHeight
+    })
+  })()`)
 const audit = {
   auditId: "12345678-1234-4234-8234-123456789abc",
   url: `https://example.com/${"long-path".repeat(30)}`,
@@ -68,6 +79,7 @@ try {
     browser("reload")
     browser("wait", '[aria-label="How Aeosys reviews a page"]')
     const initialHeight = Number(browser("eval", 'document.querySelector("main").offsetHeight'))
+    checkBackdrop()
     mockDetail("running")
     // Install in page world so React's fetch sees the held POST, not the eval sandbox.
     browser(
@@ -85,6 +97,7 @@ try {
     browser("find", "role", "button", "click", "--name", "Review page", "--exact")
     browser("wait", "[aria-busy=true]")
     check('typeof window.finishAudit === "function"')
+    checkBackdrop()
     check(`Math.abs(document.querySelector("main").offsetHeight - ${initialHeight}) <= 2`)
     check("document.documentElement.scrollWidth <= innerWidth")
     check('document.querySelector("button[type=submit]").disabled')
@@ -96,6 +109,7 @@ try {
     )
     check(`Math.abs(document.querySelector("main").offsetHeight - ${initialHeight}) <= 2`)
     check('document.querySelector("[aria-busy=true]").textContent.includes("AI is reviewing")')
+    checkBackdrop()
     mockDetail("completed")
     browser("wait", "#audit-findings")
     check('!document.querySelector("[aria-busy=true]")')
