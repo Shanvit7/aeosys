@@ -158,7 +158,6 @@ body {
 }
 
 body {
-  position: relative;
   margin: 0;
   background: var(--background);
   color: var(--foreground);

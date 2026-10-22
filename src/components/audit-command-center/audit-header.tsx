@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 
 export const AuditHeader = () => (
   <header className="px-4 sm:px-8">
-    <div className="mx-auto flex min-h-14 w-full max-w-6xl flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto flex min-h-14 w-full max-w-6xl flex-nowrap items-center justify-between gap-3">
       <Link
         href="/"
         className="flex items-center gap-2 font-semibold tracking-tight text-foreground"
@@ -28,18 +28,20 @@ export const AuditHeader = () => (
         </svg>
         Aeosys
       </Link>
-      <div className="flex items-center gap-2 sm:gap-4">
-        <SignOutButton />
+      <div className="flex shrink-0 items-center gap-2 pr-14 sm:gap-6">
         <Button
           variant="ghost"
-          size="sm"
+          size="lg"
+          className="w-11 rounded-xl px-0 text-sm font-medium tracking-tight text-muted-foreground hover:text-foreground sm:w-auto sm:px-3"
           nativeButton={false}
           render={
             <a href="/api/docs" target="_blank" rel="noreferrer" aria-label="Developer docs" />
           }
         >
-          Developer docs <ExternalLink data-icon="inline-end" />
+          <span className="hidden sm:inline">Developer docs</span>
+          <ExternalLink data-icon="inline-end" />
         </Button>
+        <SignOutButton />
       </div>
     </div>
   </header>

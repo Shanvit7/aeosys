@@ -22,7 +22,7 @@ export const openapi = {
   paths: {
     "/api/audits": {
       post: {
-        summary: "Queue a single-page audit",
+        summary: "Queue an audit of one submitted page",
         requestBody: {
           required: true,
           content: { "application/json": { schema: jsonSchema(createAuditSchema) } },

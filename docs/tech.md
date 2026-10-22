@@ -13,7 +13,7 @@
 | Background execution | `@earendil-works/pi-durable`, `pi-ai`, and `chord`, all pinned to `1.3.0`. |
 | Deployment adapter | `durable-harness` `0.0.1-beta.6`, with local/Vercel Workflow World packages. |
 | Model | Google provider; `AEOSYS_GEMINI_MODEL` or `gemini-flash-lite-latest`. |
-| Rendered inspection | `@agent-browser/sandbox` and `@vercel/sandbox`; prebuilt clean Chromium/agent-browser snapshot. |
+| Lab performance browser | `@agent-browser/sandbox` and `@vercel/sandbox`; prebuilt clean Chromium/agent-browser snapshot for lab-metric fallback. |
 | Static HTTP | Node HTTP(S), DNS, and BlockList APIs; no crawler or HTML-parser dependency. |
 | API reference | Scalar at `/api/docs`, OpenAPI 3.1.1 at `/api/openapi`. |
 | Tooling | pnpm, Biome, Oxlint, TypeScript, tsx + Node test runner, React Doctor, Knip, Husky/lint-staged. |
@@ -38,9 +38,9 @@ Versions above are package declarations, not a guarantee that every installed to
 | `src/lib/server/audits/fetcher.ts` | Public URL/DNS checks and bounded HTML fetch. |
 | `src/lib/server/audits/analyzer.ts` | Static fallback checks and metadata drafts. |
 | `src/lib/server/audits/core-web-vitals.ts` | CrUX query, field/lab parsing, metric classifications. |
-| `src/lib/server/audit-agent/agent.ts` | Agent submission/wait, timeout, JSON parsing and report scope validation. |
-| `src/lib/server/audit-agent/tools.ts` | Skill/HTML/browser tools and conversation documents. |
-| `src/lib/server/audit-agent/browser.ts` | Sandbox creation, firewall, shell execution, stop operation. |
+| `src/lib/server/agents/audit/agent.ts` | Agent submission/wait, timeout, JSON parsing and one-page report validation. |
+| `src/lib/server/agents/audit/tools.ts` | Allowlisted SEO skill and submitted-page HTML tools. |
+| `src/lib/server/agents/audit/browser.ts` | Lab performance sandbox creation, firewall, and command execution. |
 | `src/schemas/` | Request, audit, proposal, coverage, advisor, performance, and durable-store contracts. |
 | `src/lib/server/openapi.ts` | OpenAPI paths and Zod-derived schemas. |
 
@@ -56,7 +56,7 @@ Pi Durable task: start → fetch → optional agent → finish
   fetch → public HTML + final URL
     no Gemini key → deterministic partial report
     Gemini key    → child conversation + HTML snapshot
-                    → skills / optional sandbox browser
+                    → SEO skills + submitted-page HTML
                     → validate JSON and page scope
                     → completed or partial report
     agent failure → deterministic partial report
@@ -75,8 +75,7 @@ Browser → GET /api/audits/{id} every 1 second while queued/running
 - Pi Durable model-generation retries remain enabled with `maxRetries: 2`, 1,000 ms base delay, and 5,000 ms maximum agent delay.
 - Model stream timeout is 45,000 ms. Agent submission wait uses a 55,000 ms timeout; it aborts the child on timeout.
 - These limits do not amount to a single enforced end-to-end audit deadline. Fetching and final performance collection sit outside the agent wait.
-- The abort hook stops an agent browser when applicable and marks unfinished audits failed with `audit_aborted`. No public cancel endpoint exists.
-- Agent execution attempts browser cleanup in `finally`; cleanup errors are reported without discarding a report, and sandboxes also expire.
+- The abort hook marks unfinished audits failed with `audit_aborted`. No public cancel endpoint exists.
 
 ### Agent tools and output
 
@@ -84,13 +83,12 @@ The audit extension exposes only:
 
 | Tool | Behavior |
 | --- | --- |
-| `read_audit_skill` | Read allowlisted `seo-audit`, `ai-seo`, `core-web-vitals`, or `agent-browser` Markdown, restricted to `SKILL.md` or `references/<name>.md`. |
-| `inspect_page` | Read final URL, status, static HTML capped at 60,000 characters, and truncation flag. |
-| `bash` | Sequential, replay-unsafe shell execution in the audit sandbox; maximum eight tool calls, 15 seconds per command, with a 55-second budget. |
+| `read_audit_skill` | Read allowlisted `seo-audit`, `ai-seo`, or `core-web-vitals` Markdown, restricted to `SKILL.md` or `references/<name>.md`. |
+| `inspect_page` | Read the submitted page's final URL, status, static HTML capped at 60,000 characters, and truncation flag. |
 
-The model is instructed to review only the submitted/final page, avoid state changes, treat target content as untrusted, and return JSON. It is not given an API to publish changes.
+The model is instructed to review only the submitted page, avoid discovering other URLs, treat target content as untrusted, and return JSON. It is not given a browser-crawl or publish tool.
 
-The report schema permits a summary up to 2,000 characters and at most 20 findings. Parsing strips an optional JSON fence and root `$schema`, validates Zod structure, rejects extra inspected pages or any remaining URLs, requires finding sources to belong to inspected coverage, and generates application-owned finding/proposal IDs. Proposals are stamped `proposed` and `not-published`.
+The report schema permits a summary up to 2,000 characters and at most 20 findings. Parsing strips an optional JSON fence and root `$schema`, validates Zod structure, normalizes coverage to exactly the submitted page, rejects findings sourced from other pages, and generates application-owned finding/proposal IDs. Proposals are stamped `proposed` and `not-published`.
 
 URL scope comparison uses origin plus pathname, with trailing slashes removed. It accepts the submitted and final redirect destinations and ignores query/fragment. Accepted sources are normalized to the final fetched URL. Scope validation is not independent validation of the evidence's truth or of generated markup.
 
@@ -192,7 +190,7 @@ pnpm dev
 | --- | --- |
 | `GEMINI_API_KEY` | Enables AI review; without it audits use static partial fallback. Advisor has no separate no-key fallback. |
 | `AEOSYS_GEMINI_MODEL` | Optional Google model override. |
-| `AGENT_BROWSER_SNAPSHOT_ID` | Clean Vercel Sandbox image with Chromium and agent-browser preinstalled. |
+| `AGENT_BROWSER_SNAPSHOT_ID` | Clean Vercel Sandbox image for lab performance fallback. |
 | `CRUX_API_KEY` | Optional CrUX field-data query; API must be enabled in its Google Cloud project. |
 | `AEOSYS_DURABLE_DB` | Optional local SQLite path; consumed by code but absent from `.env.example`. |
 | `VERCEL` | Selects Vercel harness path; normally platform-provided. |
@@ -211,20 +209,15 @@ Checks executed during this documentation pass:
 
 ```bash
 pnpm typecheck
-pnpm exec tsx --test \
-  src/lib/server/audit-agent/agent.test.ts \
-  src/lib/server/audit-agent/browser.test.ts \
-  src/lib/server/audits/fetcher.test.ts \
-  src/lib/server/audits/core-web-vitals.test.ts \
-  src/schemas/audit.schema.test.ts \
-  src/components/audit-command-center/audit-metrics.test.tsx \
-  src/components/audit-command-center/finding-details.test.tsx
+./node_modules/.bin/tsx --conditions=import --test src/lib/server/agents/audit/agent.test.ts
+./node_modules/.bin/tsx --test src/lib/server/audits/fetcher.test.ts
+./node_modules/.bin/tsx --test src/lib/server/audits/core-web-vitals.test.ts
 ```
 
 - `pnpm typecheck`: passed.
-- Combined test run on Node `v24.19.0`: **16 passed; two test files failed to load**. `agent.test.ts` hit `ERR_PACKAGE_PATH_NOT_EXPORTED` for `@earendil-works/chord/context`; `browser.test.ts` hit the same code for `@agent-browser/sandbox/vercel`. Both failed during the tsx/CommonJS loading path, before assertions. These results do not establish that Next's bundler has the same failure.
-- Passing checks cover public-address selection, CrUX/lab parsing, locked advisor input, legacy-store defaults, metrics/filter rendering, and advisor conversation presentation.
-- Agent scope and sandbox isolation test sources exist, but their assertions were not exercised in this run because of those loading failures.
+- Targeted tests on Node `v24.19.0`: **8 passed** across audit report normalization/provider errors, public-address selection, and CrUX/lab parsing.
+- Biome and Oxlint checks passed on the changed application files. Full `pnpm lint` remains blocked by unrelated diagnostics in the current UI worktree (animated-list, speed-dial, sign-out, and login components).
+- No live production audit was performed; the local browser confirmed the updated one-page copy.
 - Package scripts expose `test:agent`, `test:fetcher`, and `test:cwv`; there is no umbrella `test` script. No end-to-end audit, browser walkthrough, production recovery, build, lint, or deployment test was performed in this pass.
 
 ## 8. Current limitations and operational caveats
@@ -234,9 +227,9 @@ These describe code as it stands, not implemented protections:
 - **No access or shared cost control:** no authentication, per-user ownership, rate limiter, global concurrency cap, or daily spend limit. Per-review budgets do not bound total spending.
 - **No full remediation loop:** proposal review statuses and verification contracts are schema/storage remnants. No approval/rejection mutations, post-fix validators, publishing integration, or report export exist.
 - **Local lab browser is outside the audit firewall:** `execFile` invokes local agent-browser directly, with no explicit timeout or public-URL/redirect checks at that call site. Initial HTML validation does not enforce safety of later browser navigation or subresources.
-- **Performance sandbox lifecycle differs:** agent cleanup runs before final performance collection. A lab fallback can recreate a sandbox afterward, outside the agent tool call counter, with no matching explicit stop in `finishAudit`; auto-expiry remains. It measures the original URL, which may differ from the final agent URL after redirects.
+- **Performance sandbox lifecycle differs:** a lab fallback can create a sandbox during final performance collection; auto-expiry remains. It measures the submitted URL, which may differ from the final URL after redirects.
 - **Mobile lab conditions are not established:** schema/UI mark lab results mobile, but the command does not configure mobile emulation explicitly.
 - **Static fallback is narrow:** regex extraction can miss valid HTML forms; snapshots after agent failure may be truncated to 60,000 characters. No HTML/schema validator independently checks AI drafts.
 - **Coverage is partly self-reported:** report structure and source scope are enforced; successful inspection and factual evidence are not independently proven. The UI displays the first partial limitation rather than a complete coverage panel.
 - **Advisor single-use is UI-only:** repeated idle API requests generate additional responses. Busy rejection is concurrency handling, not a usage quota. It never rewrites the stored proposal.
-- **Errors and tests need interpretation:** OpenAPI error envelopes differ from runtime responses, and two tests currently fail at module loading. Passing types are not end-to-end runtime proof.
+- **Errors and tests need interpretation:** OpenAPI error envelopes differ from runtime responses. Passing types and targeted unit tests are not end-to-end runtime proof.

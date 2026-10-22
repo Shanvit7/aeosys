@@ -77,7 +77,7 @@ try {
   ]) {
     browser("set", "viewport", String(width), String(height))
     browser("reload")
-    browser("wait", '[aria-label="How Aeosys reviews a page"]')
+    browser("wait", '[aria-label="How Aeosys reviews a website"]')
     const initialHeight = Number(browser("eval", 'document.querySelector("main").offsetHeight'))
     checkBackdrop()
     mockDetail("running")
@@ -94,7 +94,7 @@ try {
     })()`,
     )
     browser("fill", "#audit-url", audit.url)
-    browser("find", "role", "button", "click", "--name", "Review page", "--exact")
+    browser("find", "role", "button", "click", "--name", "Review website", "--exact")
     browser("wait", "[aria-busy=true]")
     check('typeof window.finishAudit === "function"')
     checkBackdrop()
@@ -117,7 +117,7 @@ try {
     check('!document.querySelector("button[type=submit]").disabled')
 
     // A retry must replace stale results, keep status visible, and recover on failure.
-    browser("find", "role", "button", "click", "--name", "Review page", "--exact")
+    browser("find", "role", "button", "click", "--name", "Review website", "--exact")
     browser("wait", "[aria-busy=true]")
     check('!document.querySelector("#audit-findings")')
     resolveCreate(500)

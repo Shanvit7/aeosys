@@ -3,7 +3,6 @@ import {
   type FindingFilter,
   severityLabel,
 } from "@/components/audit-command-center/utils"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import type { AuditFinding, AuditResult } from "@/schemas/audit.schema"
@@ -20,12 +19,10 @@ const priority: Record<AuditFinding["severity"], number> = {
 export const Findings = ({
   audit,
   filter,
-  onClearFilter,
   onSelect,
 }: {
   audit: AuditResult
   filter: FindingFilter | null
-  onClearFilter: () => void
   onSelect: (finding: AuditFinding) => void
 }) => {
   const findings = audit.findings
@@ -40,7 +37,7 @@ export const Findings = ({
 
   return (
     <Card id="audit-findings" className="scroll-mt-6">
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between">
+      <CardHeader>
         <div className="grid gap-1">
           <CardTitle>
             <h2>Findings</h2>
@@ -50,11 +47,6 @@ export const Findings = ({
             {filterLabel ? ` · ${filterLabel}` : " · All areas"}
           </p>
         </div>
-        {filter && (
-          <Button variant="ghost" size="lg" onClick={onClearFilter}>
-            Clear filter
-          </Button>
-        )}
       </CardHeader>
       <Separator />
       {findings.length ? (

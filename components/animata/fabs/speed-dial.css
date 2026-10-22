@@ -1,0 +1,80 @@
+@layer components {
+  @keyframes speed-dial-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.82);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes speed-dial-in-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.82);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes speed-dial-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(10px) scale(0.82);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes speed-dial-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(-10px) scale(0.82);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  [data-speed-dial-item] {
+    animation-duration: 120ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    animation-fill-mode: both;
+    animation-delay: calc(12ms + var(--i) * 22ms);
+  }
+
+  [data-direction="up"] [data-speed-dial-item] {
+    animation-name: speed-dial-in-up;
+  }
+
+  [data-direction="down"] [data-speed-dial-item] {
+    animation-name: speed-dial-in-down;
+  }
+
+  [data-direction="left"] [data-speed-dial-item] {
+    animation-name: speed-dial-in-left;
+  }
+
+  [data-direction="right"] [data-speed-dial-item] {
+    animation-name: speed-dial-in-right;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-speed-dial-item] {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

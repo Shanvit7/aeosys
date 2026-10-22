@@ -4,12 +4,12 @@
 
 ## 1. What exists
 
-Aeosys is a **single-page SEO and answer-readiness review app**. A visitor submits a public page URL, waits for a background audit, reviews source-linked findings, and can copy suggested edits. Findings with a suggested fix also offer a prepared question to an AI advisor.
+Aeosys is an **SEO and answer-readiness review app**. A visitor submits one public page URL, waits for its background audit, reviews source-linked findings, and can copy suggested edits. Findings with a suggested fix also offer a prepared question to an AI advisor.
 
 The implemented journey is:
 
 ```text
-Page URL → background audit → findings + performance data
+Page URL → findings + performance data
                            → finding details → copy suggested fix
                                              → optional advisor explanation
 ```
@@ -35,17 +35,15 @@ The selected audit ID lives in React state. Reports persist server-side, but the
 
 ## 3. What an audit reviews
 
-### Scope: one submitted page
+### Scope: submitted page only
 
-The server fetches the submitted page and follows a bounded number of public redirects. The AI receives the final URL, HTTP status, and a bounded static HTML snapshot. It may use a browser to inspect that page's rendered behavior.
+The server fetches the submitted page and follows a bounded number of public redirects. The AI receives its final URL, HTTP status, and bounded static HTML. It does not discover or fetch other pages. The report parser normalizes coverage to the submitted page and rejects findings sourced from any other page.
 
-Agent instructions prohibit following links, visiting other pages, or fetching robots.txt and sitemaps. There is no site crawler or site-wide discovery workflow. `completed` means the agent reported a completed **page-level review**, not that an entire website was audited or every SEO issue was checked.
-
-The report parser rejects additional inspected pages and nonempty remaining-page lists. Its URL identity check compares origin and pathname, ignoring query/fragment and trailing slashes; this is not strict byte-for-byte URL equality. The sandbox firewall restricts hostname and HTTP methods, not individual paths. Page-only browsing is therefore also an agent instruction, not a path-level network restriction.
+`completed` means a valid AI report was produced for the submitted page. `partial` means the AI review failed or was incomplete and deterministic checks were used instead. This is a page audit, not a site-wide audit.
 
 ### AI-assisted path
 
-With `GEMINI_API_KEY`, a Pi Durable conversation uses Gemini and installed `seo-audit`, `ai-seo`, and `core-web-vitals` guidance. Optional rendered inspection uses `agent-browser` in a Vercel Sandbox. Findings are model-generated, validated against a schema, and checked for source/coverage scope.
+With `GEMINI_API_KEY`, a Pi Durable conversation uses Gemini and the installed `seo-audit`, `ai-seo`, and `core-web-vitals` skills to review the supplied page HTML. It has no browser-crawl tool. Findings are model-generated, validated against a schema, and checked to ensure evidence points to the submitted page.
 
 Schema validation does **not** independently prove that a recommendation or proposed edit is factually correct. There is no separate per-finding provenance field that labels deterministic versus AI-generated findings; the audit summary and fallback limitations distinguish these paths at report level.
 
@@ -66,7 +64,7 @@ These checks use regular expressions, not a full HTML parser or rendered DOM. Th
 
 Successful AI output replaces the fallback path; the app does not merge deterministic findings into every AI report.
 
-**Sources:** [audit orchestration](../src/lib/server/audits/service.ts), [fallback analyzer](../src/lib/server/audits/analyzer.ts), [agent report validation](../src/lib/server/audit-agent/agent.ts).
+**Sources:** [audit orchestration](../src/lib/server/audits/service.ts), [fallback analyzer](../src/lib/server/audits/analyzer.ts), [agent report validation](../src/lib/server/agents/audit/agent.ts).
 
 ## 4. Performance data
 
@@ -84,7 +82,7 @@ The UI distinguishes real-user data from lab measurements. There is no overall S
 
 | Term | Meaning in the implementation |
 | --- | --- |
-| Audit | One submitted-page review, identified by a UUID. |
+| Audit | One submitted page, identified by a UUID. |
 | Finding | Title, severity, category, recommendation, and evidence with a source URL and check ID. |
 | Proposal / suggested fix | Optional metadata, JSON-LD, or content-snippet draft attached to a finding. It remains unpublished. |
 | Coverage | Inspected URLs, remaining URLs, a completeness flag, and limitations. Legacy discovery-oriented field names remain even though audits are page-scoped. |
@@ -97,8 +95,8 @@ Audit states:
 | --- | --- |
 | `queued` | Audit record and background task created. |
 | `running` | Task started; fetch, AI review, or final performance measurement may be in progress. |
-| `completed` | Valid AI report claims complete coverage, no remaining URLs, and at least one inspected URL. |
-| `partial` | Static fallback or an incomplete AI page review. May include an agent error alongside findings. |
+| `completed` | Valid AI report produced for the submitted page. |
+| `partial` | Static fallback because AI review failed or did not complete. May include an agent error alongside findings. |
 | `failed` | Fetch/task failed; no usable report was produced. |
 
 All newly created audits use `mode: "live"`, including static fallback results. The schema and UI support `demo`, but there is no implemented sample-report loader or demo-mode creation path.
@@ -108,7 +106,7 @@ All newly created audits use `mode: "live"`, including static fallback results. 
 - The application has **no authentication, user accounts, tenant isolation, shared rate limiter, daily quota, or spend cap**. Knowing an audit ID is enough to request its report or finding advisor.
 - Audits share one durable root store rather than separate user workspaces.
 - Initial HTML fetching blocks private-network targets, pins an allowed DNS result for the request, and rechecks redirects. Redirects may reach another public hostname; they are not constrained to the original origin.
-- Agent shell commands run in a clean sandbox without application files or secrets. Its network policy permits GET/HEAD to the audited hostname, denies configured private/reserved IPv4 ranges, and disables IPv6 before executing commands. Third-party resources are blocked, which can alter rendering.
+- The fallback lab-browser runs in a clean sandbox without application files or secrets. Its network policy permits GET/HEAD to the audited hostname, denies configured private/reserved IPv4 ranges, and disables IPv6 before executing commands. Third-party resources are blocked, which can affect performance measurements.
 - Target content and model output are treated as untrusted. Draft markup is displayed as text rather than executed.
 - The advisor has no website tools and cannot test, edit, or publish a fix. Its streamed explanation does not update the stored proposal.
 - Per-agent budgets constrain one review; they do not prevent unlimited callers from starting new reviews or repeated advisor generations.
@@ -120,9 +118,9 @@ Live arbitrary-URL auditing should not be described as access-controlled or read
 
 | Capability | Current implementation |
 | --- | --- |
-| Audit scope | Single-page review; no robots/sitemap/link discovery. |
+| Audit scope | Single submitted-page review; no robots/sitemap/link discovery. |
 | Application API | Next.js Route Handlers with Pi Durable; no Hono service. |
-| Agent integration | Pi Durable, Gemini provider, skill tools, and sandbox browser are wired in source. |
+| Agent integration | Pi Durable, Gemini provider, and SEO skill tools; sandbox browser is used only for lab performance fallback. |
 | Persistence | SQLite locally; Vercel Workflow World integration when `VERCEL` is set. |
 | Evidence-backed findings | Implemented typed findings, source URLs, coverage checks, and limitations; evidence correctness is not independently verified for AI findings. |
 | Before/after preview | Text display when a proposal provides `before`; no rendered website preview. |
@@ -137,6 +135,6 @@ Live arbitrary-URL auditing should not be described as access-controlled or read
 
 ## 8. Verification boundary
 
-This description comes from source inspection and local checks, not a fresh browser audit or production deployment test. TypeScript checking passes. The combined test run reports 16 passes and two test-file loading failures caused by package export resolution; details and runnable commands are in [tech.md](./tech.md#7-checks-and-test-status).
+This description comes from source inspection and local checks, not a production deployment test. TypeScript checking and eight targeted unit tests pass. The local browser confirmed the UI describes a single submitted page; detailed checks and remaining verification limits are in [tech.md](./tech.md#7-checks-and-test-status).
 
 Use [README.md](../README.md) for setup, this document for system behavior, and [tech.md](./tech.md) for implementation details and operational caveats.

@@ -15,9 +15,7 @@ const ErrorPage = ({ error, retry }: { error: unknown; retry: () => void }) => {
     <main className="grid min-h-dvh place-items-center bg-background px-6 py-12 text-foreground">
       <title>Something went wrong — Aeosys</title>
       <section className="w-full max-w-lg" aria-labelledby="error-heading">
-        <p className="mb-12 text-xl font-semibold tracking-tight">
-          Aeosys<span className="text-primary">.</span>
-        </p>
+        <p className="mb-12 text-xl font-semibold tracking-tight">Aeosys</p>
         <div role="alert">
           <p className="mb-4 font-mono text-xs tracking-widest text-primary uppercase">
             Unexpected error

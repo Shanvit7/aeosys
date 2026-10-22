@@ -16,7 +16,7 @@ const report = {
   },
   findings: [
     {
-      title: "Pricing page title is unclear",
+      title: "Page title is unclear",
       category: "metadata",
       severity: "low",
       evidence: { description: "Title is unclear", sourceUrl: home, checkId: "title" },
@@ -25,24 +25,30 @@ const report = {
   ],
 }
 
-test("page audit reports stay within submitted URL", () => {
+test("audit reports are normalized to the submitted page", () => {
   const parsed = parseAgentReport(JSON.stringify(report), "audit", home)
   assert.equal(parsed.findings[0]?.evidence.sourceUrl, home)
   assert.deepEqual(parsed.coverage.inspectedUrls, [home])
+  assert.deepEqual(parsed.coverage.remainingUrls, [])
+  assert.equal(parsed.coverage.discoveryComplete, true)
+
+  const extraPages = structuredClone(report)
+  extraPages.coverage.inspectedUrls.push("https://example.com/about")
+  extraPages.coverage.remainingUrls.push("https://example.com/pricing")
+  const normalized = parseAgentReport(JSON.stringify(extraPages), "audit", home)
+  assert.deepEqual(normalized.coverage.inspectedUrls, [home])
+  assert.deepEqual(normalized.coverage.remainingUrls, [])
+  assert.match(normalized.coverage.limitations[0], /Only the submitted page/)
 
   for (const sourceUrl of [
     "https://other.example/",
-    "https://example.com/about",
     "https://user@example.com/",
+    "https://example.com/about",
   ]) {
     const invalid = structuredClone(report)
     invalid.findings[0].evidence.sourceUrl = sourceUrl
     assert.throws(() => parseAgentReport(JSON.stringify(invalid), "audit", home))
   }
-
-  const extraPage = structuredClone(report)
-  extraPage.coverage.inspectedUrls.push("https://example.com/about")
-  assert.throws(() => parseAgentReport(JSON.stringify(extraPage), "audit", home))
 })
 
 test("logs bounded provider failure details without leaking the Gemini API key", async (t) => {
@@ -68,7 +74,6 @@ test("logs bounded provider failure details without leaking the Gemini API key",
           runtime,
           1 as ConversationId,
           "audit",
-          home,
           { url: home, status: 200 },
           1,
           BACKGROUND_CONTEXT,

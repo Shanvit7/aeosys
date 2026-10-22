@@ -14,14 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { authClient } from "@/lib/auth-client"
+import SpeedDial from "../../../components/animata/fabs/speed-dial"
 
 type ConfirmationProps = Record<string, never>
 
@@ -62,10 +56,23 @@ const ConfirmSignOutContent: UserComponent<ConfirmationProps, boolean, Record<st
           )}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction disabled={pending} onClick={() => void handleSignOut()}>
+          <AlertDialogCancel size="lg" disabled={pending}>
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            variant="shine"
+            size="lg"
+            disabled={pending}
+            onClick={() => void handleSignOut()}
+          >
             {pending && <LoaderCircle aria-hidden="true" className="animate-spin" />}
             {pending ? "Signing out…" : "Sign out"}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -translate-x-full transition-transform duration-700 ease-in-out group-hover/shine:translate-x-full group-disabled/shine:hidden motion-reduce:hidden"
+            >
+              <span className="absolute top-0 left-1/2 h-full w-12 rotate-30 scale-y-150 bg-foreground/15" />
+            </span>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -85,19 +92,20 @@ export const SignOutButton = () => {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={<Button variant="ghost" size="icon-lg" aria-label="Account menu" />}
-        >
-          <UserRound aria-hidden="true" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={() => void signOut()}>
-            <LogOut data-icon="inline-start" />
-            Sign out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <SpeedDial
+        direction="right"
+        triggerLabel="Open account menu"
+        triggerIcon={<UserRound aria-hidden="true" className="size-5" />}
+        rotateTriggerIcon={false}
+        actionButtons={[
+          {
+            key: "sign-out",
+            label: "Sign out",
+            icon: <LogOut aria-hidden="true" />,
+            action: () => void signOut(),
+          },
+        ]}
+      />
       <ConfirmSignOut />
     </>
   )

@@ -8,20 +8,20 @@ import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 const auditStages = [
   {
     id: "inspect",
-    title: "Start with single page.",
-    description: "We review the URL you submit for page-specific SEO and answer readiness.",
+    title: "Start with one page.",
+    description: "We review the submitted page for SEO and answer readiness.",
     Icon: ScanSearch,
   },
   {
     id: "explain",
     title: "See what stands out.",
-    description: "Each finding links to the page we checked and explains why it may matter.",
+    description: "Each finding links to the specific page checked and explains why it may matter.",
     Icon: ListChecks,
   },
   {
     id: "review",
     title: "You choose what changes.",
-    description: "Review and copy suggested edits. Aeosys never publishes to your website.",
+    description: "Review and copy suggested edits. Aeosys never publishes changes to your site.",
     Icon: Copy,
   },
 ]
@@ -41,9 +41,14 @@ export const AuditEmptyState = () => {
           autoplayInterval={5600}
         >
           <CardStack.Viewport
+            swipeable
             className="h-116"
-            onPointerEnter={() => setHovered(true)}
-            onPointerLeave={() => setHovered(false)}
+            onPointerEnter={(event) => {
+              if (event.pointerType === "mouse") setHovered(true)
+            }}
+            onPointerLeave={(event) => {
+              if (event.pointerType === "mouse") setHovered(false)
+            }}
             onFocusCapture={() => setFocused(true)}
             onBlurCapture={(event) => {
               if (
@@ -100,8 +105,11 @@ export const AuditEmptyState = () => {
                     </div>
                   </div>
 
-                  <div className="flex h-11 shrink-0 items-center justify-end">
-                    <div className="flex items-center gap-2">
+                  <div className="flex h-11 shrink-0 items-center justify-between">
+                    <span className="text-xs text-muted-foreground sm:hidden">
+                      Swipe or tap to continue
+                    </span>
+                    <div className="ml-auto flex items-center gap-2">
                       <CardStack.Trigger
                         aria-label="Show next story card"
                         className="size-11 rounded-full border border-border/70 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
