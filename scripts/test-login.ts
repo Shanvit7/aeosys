@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import dotenv from "dotenv"
+import { logger } from "@/lib/server/logger"
 
 dotenv.config({ path: ".env.local", quiet: true })
 
@@ -39,6 +40,7 @@ try {
   browser("wait", "#email")
   browser("wait", "button[aria-label='Play video']")
   check(`!document.querySelector('button[aria-label="Pause video"]')`)
+  assert.doesNotMatch(browser("console"), /Some companies are required to obtain a license/)
 
   browser("fill", "#email", "invalid@example.com")
   browser("fill", "#password", "incorrect-password")
@@ -62,12 +64,14 @@ try {
   browser("find", "role", "button", "click", "--name", "Sign out", "--exact")
   browser("wait", "#email")
   check('window.location.pathname === "/login"')
-  console.log(
+  logger.info(
     "Login passed: responsive layout, password toggle, reduced motion, errors, demo sign-in.",
   )
 } catch (error) {
-  console.error(browser("get", "url"))
-  console.error(browser("snapshot", "-i"))
+  logger.error("Login test failed", {
+    url: browser("get", "url"),
+    snapshot: browser("snapshot", "-i"),
+  })
   throw error
 } finally {
   browser("close")

@@ -32,19 +32,7 @@ export const AuditEmptyState = () => {
   const [focused, setFocused] = useState(false)
 
   return (
-    <section
-      aria-label="How Aeosys reviews a page"
-      className="relative isolate grid min-h-[clamp(30rem,62vh,44rem)] place-items-center overflow-hidden"
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,oklch(72%_0.165_48/0.12),transparent_55%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(oklch(72%_0.165_48/0.13)_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_at_center,black,transparent_72%)]"
-      />
-
+    <section aria-label="How Aeosys reviews a page" className="grid w-full place-items-center">
       <div className="w-full max-w-md px-4">
         <CardStack
           items={auditStages}

@@ -115,10 +115,13 @@ const AuditRunning = ({ url }: { url: string }) => (
     role="status"
     aria-live="polite"
     aria-busy="true"
-    className="flex animate-in fade-in slide-in-from-bottom-1 items-center gap-3 py-2 duration-300"
+    className="flex w-full max-w-md animate-in fade-in slide-in-from-bottom-1 flex-col items-center gap-4 px-4 py-8 text-center duration-300"
   >
-    <span aria-hidden="true">
-      <Spinner className="m-0" outerSize="size-6" childSize="size-4" />
+    <span
+      aria-hidden="true"
+      className="grid size-24 shrink-0 place-items-center rounded-full bg-primary/10"
+    >
+      <Spinner className="m-0" outerSize="size-10" childSize="size-7" />
     </span>
     <div className="min-w-0">
       <p className="text-sm font-medium">AI is reviewing this page…</p>
@@ -209,10 +212,10 @@ const AuditCommandCenter = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="flex min-h-dvh min-w-0 flex-col bg-background">
       <AuditHeader />
-      <main className="mx-auto grid w-full max-w-6xl gap-7 px-4 py-8 sm:px-8 sm:py-10">
-        <section className="grid animate-in fade-in slide-in-from-bottom-2 gap-6 border-b border-border/50 pb-7 duration-500 lg:grid-cols-[minmax(0,0.95fr)_minmax(25rem,1.05fr)] lg:items-end">
+      <main className="mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col gap-7 px-4 py-8 sm:px-8 sm:py-10">
+        <section className="grid shrink-0 animate-in fade-in slide-in-from-bottom-2 gap-6 border-b border-border/50 pb-7 duration-500 lg:grid-cols-[minmax(0,0.95fr)_minmax(25rem,1.05fr)] lg:items-end">
           <div className="max-w-xl">
             <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
               <span className="block">Improve this page’s</span>
@@ -232,9 +235,23 @@ const AuditCommandCenter = () => {
           />
         </section>
 
-        {!audit && !createAudit.isPending && <AuditEmptyState />}
-
-        {isActive && audit && <AuditRunning url={audit.url} />}
+        {(!audit || isBusy) && (
+          <div className="relative isolate grid min-h-[clamp(30rem,62dvh,44rem)] flex-1 place-items-center overflow-hidden">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,oklch(72%_0.165_48/0.12),transparent_55%)]"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(oklch(72%_0.165_48/0.13)_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_at_center,black,transparent_72%)]"
+            />
+            {isBusy ? (
+              <AuditRunning url={createAudit.isPending ? url : (audit?.url ?? url)} />
+            ) : (
+              <AuditEmptyState />
+            )}
+          </div>
+        )}
 
         {auditQuery.isError && (
           <Alert variant="destructive">
@@ -244,7 +261,7 @@ const AuditCommandCenter = () => {
           </Alert>
         )}
 
-        {audit && !isActive && (
+        {audit && !isBusy && (
           <AuditReport
             audit={audit}
             filter={findingFilter}
