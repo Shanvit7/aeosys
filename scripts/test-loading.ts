@@ -54,7 +54,7 @@ test("streamed public loading fills the viewport with one background", async () 
   const html = await response.text()
   const mainEnd = html.indexOf("</main>")
   assert.ok(mainEnd >= 0, "Expected the real server-rendered loading shell.")
-  const loadingDocument = `${html.slice(0, mainEnd + 7).replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "")}</body></html>`
+  const loadingHtml = html.slice(0, mainEnd + 7)
   const session = execFileSync(
     "agent-browser",
     ["session", "id", "--scope", "worktree", "--prefix", "route-loading"],
@@ -73,20 +73,13 @@ test("streamed public loading fills the viewport with one background", async () 
     browser(
       "eval",
       `(() => {
-        document.open()
-        document.write(${JSON.stringify(loadingDocument)})
-        document.close()
-      })()`,
-    )
-    browser("wait", "--load", "load")
-    browser("wait", 'main[aria-busy="true"]')
-    browser(
-      "eval",
-      `(() => {
+        const parsed = new DOMParser().parseFromString(${JSON.stringify(loadingHtml)}, 'text/html')
+        const main = parsed.querySelector('main[aria-busy="true"]')
+        if (!main) throw new Error('Expected the server-rendered loading shell.')
         const host = document.createElement('div')
         host.style.cssText = 'width: 16rem; margin: 2rem auto; padding: 1rem'
         document.body.append(host)
-        host.append(document.querySelector('main'))
+        host.append(main)
       })()`,
     )
     for (const [width, height] of [

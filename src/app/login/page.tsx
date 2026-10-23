@@ -40,16 +40,15 @@ const LoginPage = () => {
             ? "Too many attempts. Wait a minute, then try again."
             : "Please check if credentials are valid",
         )
-        setPending(false)
         return
       }
-      setPending(false)
       startNavigation(() => {
         router.replace("/")
         router.refresh()
       })
     } catch {
       setError("Sign-in failed. Check your connection and try again.")
+    } finally {
       setPending(false)
     }
   }
