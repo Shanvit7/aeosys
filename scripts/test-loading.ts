@@ -48,7 +48,13 @@ test("unauthenticated requests show public loading, then redirect to login", asy
   }
 })
 
-test("public loading covers the viewport even inside a constrained layout", () => {
+test("streamed public loading fills the viewport with one background", async () => {
+  const baseUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000"
+  const response = await fetch(`${baseUrl}/`, { signal: AbortSignal.timeout(15_000) })
+  const html = await response.text()
+  const mainEnd = html.indexOf("</main>")
+  assert.ok(mainEnd >= 0, "Expected the real server-rendered loading shell.")
+  const loadingHtml = html.slice(0, mainEnd + 7)
   const session = execFileSync(
     "agent-browser",
     ["session", "id", "--scope", "worktree", "--prefix", "route-loading"],
@@ -61,21 +67,25 @@ test("public loading covers the viewport even inside a constrained layout", () =
     }).trim()
 
   try {
-    browser("open", `${process.env.BETTER_AUTH_URL ?? "http://localhost:3000"}/login`)
+    browser("open", `${baseUrl}/login`)
     browser("wait", "#email")
     browser("set", "media", "dark", "reduced-motion")
     browser(
       "eval",
       `(() => {
+        const parsed = new DOMParser().parseFromString(${JSON.stringify(loadingHtml)}, 'text/html')
+        const main = parsed.querySelector('main[aria-busy="true"]')
+        if (!main) throw new Error('Expected the server-rendered loading shell.')
         const host = document.createElement('div')
         host.style.cssText = 'width: 16rem; margin: 2rem auto; padding: 1rem'
-        host.innerHTML = ${JSON.stringify(publicMarkup)}
-        document.body.replaceChildren(host)
+        document.body.append(host)
+        host.append(main)
       })()`,
     )
     for (const [width, height] of [
       [375, 812],
       [1440, 1000],
+      [1470, 756],
       [812, 375],
     ]) {
       browser("set", "viewport", String(width), String(height))
@@ -87,11 +97,13 @@ test("public loading covers the viewport even inside a constrained layout", () =
           const rect = main.getBoundingClientRect()
           return rect.x === 0 && rect.y === 0 && rect.width === innerWidth &&
             rect.height === innerHeight && document.documentElement.scrollWidth <= innerWidth &&
-            getComputedStyle(main).backgroundColor === getComputedStyle(document.body).backgroundColor
+            getComputedStyle(main).backgroundColor === 'rgba(0, 0, 0, 0)' &&
+            getComputedStyle(document.documentElement).backgroundColor ===
+              getComputedStyle(document.body).backgroundColor
         })()`,
         ),
         "true",
-        `Loading must fill ${width}×${height}, not its narrow padded parent`,
+        `Loading must fill ${width}×${height} without a separate background panel`,
       )
     }
   } finally {

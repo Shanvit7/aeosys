@@ -4,7 +4,7 @@ import { Eye, EyeOff, LoaderCircle, LockKeyhole } from "lucide-react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useState, useTransition } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -20,6 +20,8 @@ const LoginPage = () => {
   const router = useRouter()
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
+  const [isNavigationPending, startNavigation] = useTransition()
+  const isBusy = pending || isNavigationPending
   const [showPassword, setShowPassword] = useState(false)
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -36,12 +38,14 @@ const LoginPage = () => {
         setError(
           result.error.status === 429
             ? "Too many attempts. Wait a minute, then try again."
-            : "Unable to sign in with those credentials.",
+            : "Please check if credentials are valid",
         )
         return
       }
-      router.replace("/")
-      router.refresh()
+      startNavigation(() => {
+        router.replace("/")
+        router.refresh()
+      })
     } catch {
       setError("Sign-in failed. Check your connection and try again.")
     } finally {
@@ -102,7 +106,7 @@ const LoginPage = () => {
                 className="mt-6 sm:mt-7 [@media(max-height:680px)]:mt-3"
                 onSubmit={submit}
                 aria-label="Sign in"
-                aria-busy={pending}
+                aria-busy={isBusy}
               >
                 <FieldGroup>
                   <Field>
@@ -114,7 +118,7 @@ const LoginPage = () => {
                       autoComplete="username"
                       placeholder="you@company.com"
                       required
-                      readOnly={pending}
+                      readOnly={isBusy}
                     />
                   </Field>
                   <Field>
@@ -139,7 +143,7 @@ const LoginPage = () => {
                       autoComplete="current-password"
                       placeholder="Enter your password"
                       required
-                      readOnly={pending}
+                      readOnly={isBusy}
                     />
                   </Field>
                   {error && (
@@ -152,10 +156,10 @@ const LoginPage = () => {
                     variant="shine"
                     size="lg"
                     type="submit"
-                    disabled={pending}
+                    disabled={isBusy}
                   >
-                    {pending ? "Signing in…" : "Sign in"}
-                    {pending && (
+                    {isBusy ? "Signing in…" : "Sign in"}
+                    {isBusy && (
                       <LoaderCircle
                         aria-hidden="true"
                         data-icon="inline-end"
