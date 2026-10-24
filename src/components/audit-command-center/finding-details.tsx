@@ -1,5 +1,5 @@
 import { ArrowUp, Check, Copy, ExternalLink, X } from "lucide-react"
-import { type SubmitEvent, useState } from "react"
+import { type SubmitEvent, useLayoutEffect, useRef, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -36,69 +36,78 @@ const AdvisorConversation = ({
   messages: AdvisorMessage[]
   streamed: string
   isPending: boolean
-}) => (
-  <MessageScrollerProvider autoScroll defaultScrollPosition="end">
-    <MessageScroller className="h-[min(24rem,50dvh)] w-full">
-      <MessageScrollerViewport aria-label="Advisor conversation">
-        <MessageScrollerContent className="gap-5 px-1 pb-12" aria-live="polite">
-          {messages.map((item) => (
-            <MessageScrollerItem
-              key={`${item.role}:${item.content}`}
-              scrollAnchor={item.role === "user"}
-            >
-              <Message align={item.role === "user" ? "end" : "start"}>
-                <MessageContent>
-                  <MessageHeader>{item.role === "user" ? "You" : "Advisor"}</MessageHeader>
-                  <Bubble
-                    variant={item.role === "user" ? "secondary" : "ghost"}
-                    align={item.role === "user" ? "end" : "start"}
-                    className={item.role === "assistant" ? "w-full" : undefined}
-                  >
-                    <BubbleContent className={item.role === "assistant" ? "w-full" : undefined}>
-                      {item.role === "assistant" ? (
+}) => {
+  const viewportRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current
+    if (viewport) viewport.scrollTop = viewport.scrollHeight
+  })
+
+  return (
+    <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+      <MessageScroller className="h-[min(24rem,50dvh)] w-full">
+        <MessageScrollerViewport ref={viewportRef} aria-label="Advisor conversation">
+          <MessageScrollerContent className="gap-5 px-1 pb-12" aria-live="polite">
+            {messages.map((item) => (
+              <MessageScrollerItem
+                key={`${item.role}:${item.content}`}
+                scrollAnchor={item.role === "user"}
+              >
+                <Message align={item.role === "user" ? "end" : "start"}>
+                  <MessageContent>
+                    <MessageHeader>{item.role === "user" ? "You" : "Advisor"}</MessageHeader>
+                    <Bubble
+                      variant={item.role === "user" ? "secondary" : "ghost"}
+                      align={item.role === "user" ? "end" : "start"}
+                      className={item.role === "assistant" ? "w-full" : undefined}
+                    >
+                      <BubbleContent className={item.role === "assistant" ? "w-full" : undefined}>
+                        {item.role === "assistant" ? (
+                          <div className="typeset min-w-0 wrap-break-word [&_pre]:max-w-full">
+                            <ReactMarkdown>{item.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{item.content}</p>
+                        )}
+                      </BubbleContent>
+                    </Bubble>
+                  </MessageContent>
+                </Message>
+              </MessageScrollerItem>
+            ))}
+            {isPending && !streamed && (
+              <MessageScrollerItem>
+                <Trace role="status">
+                  <TraceLine status="running">
+                    <TraceTitle>Reviewing the suggested fix…</TraceTitle>
+                  </TraceLine>
+                </Trace>
+              </MessageScrollerItem>
+            )}
+            {isPending && streamed && (
+              <MessageScrollerItem scrollAnchor>
+                <Message align="start">
+                  <MessageContent>
+                    <MessageHeader>Advisor</MessageHeader>
+                    <Bubble variant="ghost" align="start" className="w-full">
+                      <BubbleContent className="w-full">
                         <div className="typeset min-w-0 wrap-break-word [&_pre]:max-w-full">
-                          <ReactMarkdown>{item.content}</ReactMarkdown>
+                          <ReactMarkdown>{streamed}</ReactMarkdown>
                         </div>
-                      ) : (
-                        <p className="whitespace-pre-wrap">{item.content}</p>
-                      )}
-                    </BubbleContent>
-                  </Bubble>
-                </MessageContent>
-              </Message>
-            </MessageScrollerItem>
-          ))}
-          {isPending && !streamed && (
-            <MessageScrollerItem>
-              <Trace role="status">
-                <TraceLine status="running">
-                  <TraceTitle>Reviewing the suggested fix…</TraceTitle>
-                </TraceLine>
-              </Trace>
-            </MessageScrollerItem>
-          )}
-          {isPending && streamed && (
-            <MessageScrollerItem scrollAnchor>
-              <Message align="start">
-                <MessageContent>
-                  <MessageHeader>Advisor</MessageHeader>
-                  <Bubble variant="ghost" align="start" className="w-full">
-                    <BubbleContent className="w-full">
-                      <div className="typeset min-w-0 wrap-break-word [&_pre]:max-w-full">
-                        <ReactMarkdown>{streamed}</ReactMarkdown>
-                      </div>
-                    </BubbleContent>
-                  </Bubble>
-                </MessageContent>
-              </Message>
-            </MessageScrollerItem>
-          )}
-        </MessageScrollerContent>
-      </MessageScrollerViewport>
-      <MessageScrollerButton aria-label="Jump to latest reply" />
-    </MessageScroller>
-  </MessageScrollerProvider>
-)
+                      </BubbleContent>
+                    </Bubble>
+                  </MessageContent>
+                </Message>
+              </MessageScrollerItem>
+            )}
+          </MessageScrollerContent>
+        </MessageScrollerViewport>
+        <MessageScrollerButton aria-label="Jump to latest reply" />
+      </MessageScroller>
+    </MessageScrollerProvider>
+  )
+}
 
 const AdvisorPromptForm = ({
   prompt,
