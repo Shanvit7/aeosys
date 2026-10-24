@@ -1,6 +1,6 @@
 "use client"
 
-import { LoaderCircle, LogOut, UserRound } from "lucide-react"
+import { LoaderCircle, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useRef, useState, useTransition } from "react"
 import { createCallable, type UserComponent } from "react-call"
@@ -14,8 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
-import SpeedDial from "../../../components/animata/fabs/speed-dial"
 
 type ConfirmationProps = Record<string, never>
 
@@ -84,12 +84,11 @@ const ConfirmSignOut = createCallable(ConfirmSignOutContent)
 
 export const SignOutButton = () => {
   const router = useRouter()
-  const pending = useRef(false)
   const [isNavigationPending, startNavigation] = useTransition()
-  const signOut = async () => {
-    if (pending.current || !(await ConfirmSignOut.call({}))) return
-    pending.current = true
-    startNavigation(() => {
+  const signOut = () => {
+    if (isNavigationPending) return
+    startNavigation(async () => {
+      if (!(await ConfirmSignOut.call({}))) return
       router.replace("/login")
       router.refresh()
     })
@@ -97,26 +96,21 @@ export const SignOutButton = () => {
 
   return (
     <>
-      <SpeedDial
+      <Button
+        variant="outline"
+        size="icon-lg"
+        aria-label="Sign out"
+        aria-haspopup="dialog"
         aria-busy={isNavigationPending}
-        className={isNavigationPending ? "pointer-events-none opacity-60" : undefined}
-        direction="right"
-        triggerLabel="Open account menu"
-        triggerIcon={<UserRound aria-hidden="true" className="size-5" />}
-        rotateTriggerIcon={false}
-        actionButtons={[
-          {
-            key: "sign-out",
-            label: "Sign out",
-            icon: isNavigationPending ? (
-              <LoaderCircle aria-hidden="true" className="animate-spin" />
-            ) : (
-              <LogOut aria-hidden="true" />
-            ),
-            action: () => void signOut(),
-          },
-        ]}
-      />
+        disabled={isNavigationPending}
+        onClick={signOut}
+      >
+        {isNavigationPending ? (
+          <LoaderCircle aria-hidden="true" className="animate-spin" />
+        ) : (
+          <LogOut aria-hidden="true" />
+        )}
+      </Button>
       <ConfirmSignOut />
     </>
   )

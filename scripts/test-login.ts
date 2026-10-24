@@ -46,26 +46,35 @@ try {
   browser("fill", "#password", "incorrect-password")
   browser("find", "role", "button", "click", "--name", "Sign in", "--exact")
   browser("wait", "[role=alert]")
-  check('document.querySelector("[role=alert]").textContent.includes("Unable to sign in")')
+  check(
+    'document.querySelector("[role=alert]").textContent.includes("Please check if credentials are valid")',
+  )
   check('document.querySelector("#email").value === "invalid@example.com"')
 
   const email = process.env.DEMO_EMAIL
   const password = process.env.DEMO_PASSWORD
   assert.ok(email && password, "Set DEMO_EMAIL and DEMO_PASSWORD to test seeded login.")
-  browser("fill", "#email", email)
-  browser("fill", "#password", password)
-  browser("find", "role", "button", "click", "--name", "Sign in", "--exact")
-  browser("wait", "#audit-url")
-  check('window.location.pathname === "/"')
-  browser("find", "role", "button", "click", "--name", "Account menu", "--exact")
-  browser("wait", "[role=menuitem]")
-  browser("find", "role", "menuitem", "click", "--name", "Sign out", "--exact")
-  browser("wait", '[data-slot="alert-dialog-content"]')
-  browser("find", "role", "button", "click", "--name", "Sign out", "--exact")
-  browser("wait", "#email")
-  check('window.location.pathname === "/login"')
+  for (let cycle = 0; cycle < 2; cycle++) {
+    browser("fill", "#email", email)
+    browser("fill", "#password", password)
+    browser("find", "role", "button", "click", "--name", "Sign in", "--exact")
+    browser("wait", "#audit-url")
+    check('window.location.pathname === "/"')
+    browser("set", "viewport", cycle === 0 ? "375" : "1440", "900")
+    browser("eval", "window.__logoutDocument = true")
+    browser("find", "role", "button", "click", "--name", "Sign out", "--exact")
+    browser("wait", '[data-slot="alert-dialog-content"]')
+    browser("find", "role", "button", "click", "--name", "Cancel", "--exact")
+    browser("wait", 'button[aria-label="Sign out"]')
+    browser("find", "role", "button", "click", "--name", "Sign out", "--exact")
+    browser("wait", '[data-slot="alert-dialog-content"]')
+    browser("find", "role", "button", "click", "--name", "Sign out", "--exact")
+    browser("wait", "#email")
+    check('window.location.pathname === "/login"')
+    check("window.__logoutDocument === true")
+  }
   logger.info(
-    "Login passed: responsive layout, password toggle, reduced motion, errors, demo sign-in.",
+    "Login passed: direct logout confirmation, cancel/reopen on mobile and desktop, repeated sign-in/out with router navigation.",
   )
 } catch (error) {
   logger.error("Login test failed", {
