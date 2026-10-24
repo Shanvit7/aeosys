@@ -37,7 +37,7 @@ const AdvisorConversation = ({
   streamed: string
   isPending: boolean
 }) => (
-  <MessageScrollerProvider autoScroll defaultScrollPosition="start">
+  <MessageScrollerProvider autoScroll defaultScrollPosition="end">
     <MessageScroller className="h-[min(24rem,50dvh)] w-full">
       <MessageScrollerViewport aria-label="Advisor conversation">
         <MessageScrollerContent className="gap-5 px-1 pb-12" aria-live="polite">
