@@ -180,10 +180,7 @@ export default function SpeedDial({
                 role="menuitem"
                 className={shellClass}
                 aria-label={action.label}
-                onClick={() => {
-                  action.action()
-                  close()
-                }}
+                onClick={action.action}
               >
                 <span className="sr-only">{action.label}</span>
                 <span

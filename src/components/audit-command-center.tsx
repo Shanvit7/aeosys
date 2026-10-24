@@ -2,7 +2,7 @@
 
 import { ArrowRight, ArrowUpRight, CircleAlert, LoaderCircle } from "lucide-react"
 import dynamic from "next/dynamic"
-import { type FormEvent, useEffect, useRef, useState } from "react"
+import { type SubmitEvent, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import type { FindingFilter } from "@/components/audit-command-center/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -44,7 +44,7 @@ const ReviewForm = ({
   isLoading: boolean
   isError: boolean
   onUrlChange: (value: string) => void
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
 }) => (
   <div className="min-w-0">
     <form
@@ -219,7 +219,7 @@ const AuditCommandCenter = () => {
   const isActive = audit?.status === "queued" || audit?.status === "running"
   const isLoading = createAudit.isPending || (Boolean(activeAuditId) && auditQuery.isPending)
   const isBusy = isLoading || isActive
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     createAudit.mutate(
       { url },

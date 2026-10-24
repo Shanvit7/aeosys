@@ -161,7 +161,7 @@ Each redirect destination is revalidated. Limits are three redirects, 1,000,000 
 
 ### Rendered audit browser
 
-A sandbox is named from a hash of the child conversation ID and created/reused from `AGENT_BROWSER_SNAPSHOT_ID`. It receives no app files or credentials. Its configured network policy permits GET/HEAD on the audited hostname, denies configured IPv4 ranges, and blocks other methods/resources. IPv6 is disabled through `sysctl` before the shell command; failure blocks execution. Stdout is capped at 60,000 characters and stderr at 10,000.
+A sandbox is named from a hash of the child conversation ID and created/reused from `AGENT_BROWSER_SNAPSHOT_ID`. It receives no app files or credentials. Its configured network policy permits GET/HEAD on the audited hostname and up to 20 exact HTTPS asset hosts discovered in the fetched HTML; each asset host is revalidated as public. Other methods/resources are blocked, configured IPv4 ranges are denied, and IPv6 is disabled through `sysctl` before the shell command; failure blocks execution. Assets loaded only by JavaScript or external CSS may not be discovered. Stdout is capped at 60,000 characters and stderr at 10,000.
 
 The sandbox shell is general-purpose, not a strict command allowlist. A regex rejects some Python invocation forms, while model instructions prohibit Python/HTTP fallbacks and state-changing behavior. The hard controls are sandbox isolation and network policy, not that regex or perfect instruction following. Hostname isolation also does not guarantee every GET is side-effect-free.
 

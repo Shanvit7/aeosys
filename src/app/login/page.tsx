@@ -4,7 +4,7 @@ import { Eye, EyeOff, LoaderCircle, LockKeyhole } from "lucide-react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { type FormEvent, useState, useTransition } from "react"
+import { type SubmitEvent, useState, useTransition } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -24,7 +24,7 @@ const LoginPage = () => {
   const isBusy = pending || isNavigationPending
   const [showPassword, setShowPassword] = useState(false)
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError("")
     setPending(true)
