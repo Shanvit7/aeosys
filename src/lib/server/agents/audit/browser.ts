@@ -63,7 +63,6 @@ export const runAuditCommand = async (
       source: { type: "snapshot", snapshotId },
       persistent: false,
       timeout: AUDIT_BROWSER_TIMEOUT_MS,
-      env: { AGENT_BROWSER_ALLOWED_DOMAINS: allowedHosts.join(",") },
       networkPolicy: {
         allow: Object.fromEntries(
           allowedHosts.map((host) => [

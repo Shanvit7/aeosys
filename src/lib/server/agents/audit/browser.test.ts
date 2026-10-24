@@ -89,9 +89,7 @@ test("sandbox allows discovered public asset hosts only", async (t) => {
           { response: { statusCode: 403 } },
         ],
       })
-      assert.deepEqual(options.env, {
-        AGENT_BROWSER_ALLOWED_DOMAINS: "8.8.8.8,1.1.1.1",
-      })
+      assert.equal(options.env, undefined)
       return {
         runCommand: async () => ({ exitCode: 0, stdout: async () => "ok", stderr: async () => "" }),
       }
