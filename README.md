@@ -6,6 +6,14 @@
 
 <p align="center">A focused SEO and answer-readiness review of one submitted page.</p>
 
+## Demo
+
+
+
+https://github.com/user-attachments/assets/eb6c36a5-3532-443e-8538-afdd9296c7da
+
+
+
 <p align="center">
   <a href="./docs/system.md">System overview</a> ·
   <a href="./docs/tech.md">Technical documentation</a>
