@@ -28,7 +28,7 @@ export const AuditHeader = () => (
         </svg>
         Aeosys
       </Link>
-      <div className="flex shrink-0 items-center gap-2 pr-14 sm:gap-6">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-6">
         <Button
           variant="ghost"
           size="lg"

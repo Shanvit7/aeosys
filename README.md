@@ -8,7 +8,7 @@
 
 ## Demo
 
-<video src="https://github.com/user-attachments/assets/3f2bbdf7-6e81-40b0-87a0-16a573763df7" controls width="100%"></video>
+<video src="https://github.com/user-attachments/assets/3f2bbdf7-6e81-40b0-87a0-16a573763df7" controls preload="metadata" playsinline width="1280"></video>
 
 <p align="center">
   <a href="./docs/system.md">System overview</a> ·
