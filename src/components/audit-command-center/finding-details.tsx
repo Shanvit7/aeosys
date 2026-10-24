@@ -1,5 +1,5 @@
 import { ArrowUp, Check, Copy, ExternalLink, X } from "lucide-react"
-import { type FormEvent, useState } from "react"
+import { type SubmitEvent, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -107,7 +107,7 @@ const AdvisorPromptForm = ({
 }: {
   prompt: string
   disabled: boolean
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
 }) => (
   <form onSubmit={onSubmit}>
     <InputGroup aria-label="Prepared question">
@@ -139,7 +139,7 @@ export const AdvisorChat = ({ auditId, finding }: { auditId: string; finding: Au
     send.isPending && !messages.length ? [{ role: "user" as const, content: prompt }] : messages
   const hasConversation = promptUsed || send.isPending || messages.length > 0
   const error = send.error ?? query.error
-  const submitMessage = (event: FormEvent<HTMLFormElement>) => {
+  const submitMessage = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!query.isSuccess || promptUsed || send.isPending) return
     send.mutate({ auditId, findingId: finding.id })
@@ -235,15 +235,9 @@ export const FindingDetails = ({
               </DrawerDescription>
             </DrawerHeader>
             <div className="min-h-0 w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5 pb-6 sm:px-6 sm:pb-8">
-              {proposal && (
-                <div className="mb-6">
-                  <AdvisorChat
-                    key={`${auditId}:${finding.id}`}
-                    auditId={auditId}
-                    finding={finding}
-                  />
-                </div>
-              )}
+              <div className="mb-6">
+                <AdvisorChat key={`${auditId}:${finding.id}`} auditId={auditId} finding={finding} />
+              </div>
               <div className="grid min-w-0 gap-6">
                 <section className="grid gap-2.5">
                   <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

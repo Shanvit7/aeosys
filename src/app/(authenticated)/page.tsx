@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import { AuditCommandCenter } from "@/components/audit-command-center"
 
+export const instant = false
+
 export const metadata: Metadata = {
   title: "Page audit — Aeosys",
   description:

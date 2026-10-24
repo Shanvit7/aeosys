@@ -8,6 +8,28 @@ import { logger } from "@/lib/server/logger"
 const AUDIT_BROWSER_TIMEOUT_MS = 55_000
 const sandboxName = (conversationId: ConversationId) =>
   `aeosys-${createHash("sha256").update(String(conversationId)).digest("hex").slice(0, 32)}`
+// ponytail: cap discovered origins at 20; raise if real pages need more.
+const MAX_ASSET_HOSTS = 20
+
+export const assetHostsFromHtml = (html: string, pageUrl: string) => {
+  const hosts = new Set<string>()
+  const tags = html.matchAll(/<(?:img|script|source|video|audio|iframe|link)\b[^>]*>/gi)
+  for (const [tag] of tags) {
+    for (const [, rawValue] of tag.matchAll(/\b(?:src|href|poster|srcset)\s*=\s*["']([^"']+)/gi)) {
+      for (const candidate of rawValue.split(",")) {
+        const value = candidate.trim().split(/\s+/, 1)[0]
+        try {
+          const url = new URL(value, pageUrl)
+          if (url.protocol === "https:") hosts.add(url.hostname)
+        } catch {
+          continue
+        }
+        if (hosts.size >= MAX_ASSET_HOSTS) return [...hosts]
+      }
+    }
+  }
+  return [...hosts]
+}
 
 export const runAuditCommand = async (
   conversationId: ConversationId,
@@ -15,10 +37,19 @@ export const runAuditCommand = async (
   command: string,
   signal?: AbortSignal,
   timeoutMs = 15_000,
+  resourceHosts: string[] = [],
 ) => {
   const snapshotId = process.env.AGENT_BROWSER_SNAPSHOT_ID
   if (!snapshotId) throw new Error("Set AGENT_BROWSER_SNAPSHOT_ID to enable agent-browser audits")
   const url = await validatePublicUrl(input)
+  const hosts = new Set([url.hostname])
+  const validatedResources = await Promise.allSettled(
+    resourceHosts.map((host) => validatePublicUrl(`https://${host}`)),
+  )
+  for (const result of validatedResources) {
+    if (result.status === "fulfilled") hosts.add(result.value.hostname)
+  }
+  const allowedHosts = [...hosts]
   const commandSignal = AbortSignal.any([
     AbortSignal.timeout(timeoutMs),
     ...(signal ? [signal] : []),
@@ -32,14 +63,20 @@ export const runAuditCommand = async (
       source: { type: "snapshot", snapshotId },
       persistent: false,
       timeout: AUDIT_BROWSER_TIMEOUT_MS,
-      env: { AGENT_BROWSER_ALLOWED_DOMAINS: url.hostname },
+      env: { AGENT_BROWSER_ALLOWED_DOMAINS: allowedHosts.join(",") },
       networkPolicy: {
-        allow: {
-          [url.hostname]: [
-            { match: { method: ["GET", "HEAD"] }, transform: [{ headers: { host: url.host } }] },
-            { response: { statusCode: 403 } },
-          ],
-        },
+        allow: Object.fromEntries(
+          allowedHosts.map((host) => [
+            host,
+            [
+              {
+                match: { method: ["GET", "HEAD"] },
+                transform: [{ headers: { host: host === url.hostname ? url.host : host } }],
+              },
+              { response: { statusCode: 403 } },
+            ],
+          ]),
+        ),
         // Sandbox's API rejects IPv6 CIDRs; disable IPv6 in the VM before running commands.
         subnets: { deny: blockedNetworkRanges.filter((range) => !range.includes(":")) },
       },

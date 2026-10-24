@@ -21,7 +21,7 @@ import {
 import { openNodeSqliteStorage } from "@earendil-works/pi-durable/storage/sqlite/node"
 import { acquireHarness, openWorldStorage, resumeWith } from "durable-harness/pi-durable"
 import { AuditAgentError, runAuditAgent } from "@/lib/server/agents/audit/agent"
-import { runAuditCommand } from "@/lib/server/agents/audit/browser"
+import { assetHostsFromHtml, runAuditCommand } from "@/lib/server/agents/audit/browser"
 import {
   type AuditPage,
   type AuditPageSnapshot,
@@ -457,12 +457,20 @@ const runVitals = async (url: string, browserConversationId?: ConversationId) =>
     return JSON.parse(stdout)
   } catch (error) {
     if (!browserConversationId || !process.env.AGENT_BROWSER_SNAPSHOT_ID) throw error
+    let resourceHosts: string[] = []
+    try {
+      const page = await fetchPublicHtml(url)
+      resourceHosts = [new URL(page.url).hostname, ...assetHostsFromHtml(page.body, page.url)]
+    } catch {
+      // Keep the audited hostname allowlisted if HTML asset discovery fails.
+    }
     const result = await runAuditCommand(
       browserConversationId,
       url,
       `agent-browser --session audit-vitals vitals ${shellQuote(url)} --json`,
       undefined,
       30_000,
+      resourceHosts,
     )
     if (result.exitCode !== 0) throw new Error("Core Web Vitals measurement failed")
     return JSON.parse(result.stdout)

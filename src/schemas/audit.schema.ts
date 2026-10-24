@@ -88,8 +88,10 @@ export const auditResultSchema = z.object({
   error: auditErrorSchema.optional(),
 })
 
-export const advisorPromptFor = (finding: Pick<AuditFinding, "title">) =>
-  `How should I fix “${finding.title.slice(0, 300)}” on this page?`
+export const advisorPromptFor = (finding: Pick<AuditFinding, "title" | "proposedFix">) =>
+  finding.proposedFix
+    ? `How should I fix “${finding.title.slice(0, 300)}” on this page?`
+    : `Does “${finding.title.slice(0, 300)}” need action, and what should I do?`
 
 export const advisorChatRequestSchema = z.strictObject({})
 const advisorMessageSchema = z.object({

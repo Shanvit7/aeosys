@@ -34,9 +34,9 @@ const renderChat = (messages: AdvisorMessage[] = []) => {
   return html
 }
 
-test("unsent question is compact, noneditable, and contains no answer or instructional chrome", () => {
+test("note starts with compact action question and no answer or instructional chrome", () => {
   const html = renderChat()
-  assert.match(html, /How should I fix “Missing section headings” on this page\?/)
+  assert.match(html, /Does “Missing section headings” need action, and what should I do\?/)
   assert.match(html, /data-slot="input-group"/)
   assert.match(html, /type="submit"[^>]*aria-label="Send question"/)
   assert.doesNotMatch(

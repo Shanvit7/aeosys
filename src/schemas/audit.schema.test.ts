@@ -13,7 +13,21 @@ test("advisor accepts only a send action, never caller-written text", () => {
 test("locked advisor prompt asks about the finding without including its answer", () => {
   const finding = { title: "Missing H2 headings", recommendation: "Add descriptive H2 headings." }
   const prompt = advisorPromptFor(finding)
-  assert.equal(prompt, "How should I fix “Missing H2 headings” on this page?")
+  assert.equal(prompt, "Does “Missing H2 headings” need action, and what should I do?")
+  assert.equal(
+    advisorPromptFor({
+      title: finding.title,
+      proposedFix: {
+        id: "fix",
+        kind: "metadata",
+        rationale: "Improve metadata",
+        after: "<title>Page</title>",
+        status: "proposed",
+        publicationStatus: "not-published",
+      },
+    }),
+    "How should I fix “Missing H2 headings” on this page?",
+  )
   assert.doesNotMatch(prompt, /Suggested fix:|Add descriptive H2 headings\./)
   const changedRecommendation = { ...finding, recommendation: "A different answer" }
   assert.equal(advisorPromptFor(changedRecommendation), prompt)

@@ -6,7 +6,7 @@ import {
   type Harness,
   UserEntry,
 } from "@earendil-works/pi-durable"
-import { AuditNotFoundError, ProposalNotFoundError } from "@/lib/server/audits/errors"
+import { AuditNotFoundError } from "@/lib/server/audits/errors"
 import { AuditsDoc, auditAgentExtension, getAudit } from "@/lib/server/audits/service"
 import type { AdvisorMessage, AuditFinding } from "@/schemas/audit.schema"
 import { buildAdvisorInstructions } from "./prompt"
@@ -17,9 +17,7 @@ export const getAdvisorFinding = async (auditId: string, findingId: string) => {
   const audit = await getAudit(auditId)
   const finding = audit.findings.find((item) => item.id === findingId)
   if (!finding) throw new AuditNotFoundError("Finding not found")
-  const proposal = finding.proposedFix
-  if (!proposal) throw new ProposalNotFoundError("Finding has no suggested fix")
-  return { audit, finding, proposal }
+  return { audit, finding, proposal: finding.proposedFix }
 }
 
 export const readAdvisorMessages = async (harness: Harness, conversationId: ConversationId) => {
@@ -54,7 +52,7 @@ export const ensureAdvisorConversation = async (
     key: string
     audit: Awaited<ReturnType<typeof getAudit>>
     finding: AuditFinding
-    proposal: NonNullable<AuditFinding["proposedFix"]>
+    proposal?: AuditFinding["proposedFix"]
   },
 ) => {
   const claim = await harness.commit(async (tx) => {
