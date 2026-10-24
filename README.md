@@ -8,7 +8,11 @@
 
 ## Demo
 
-<video src="https://github.com/user-attachments/assets/3f2bbdf7-6e81-40b0-87a0-16a573763df7" controls preload="metadata" playsinline width="1280"></video>
+
+
+https://github.com/user-attachments/assets/eb6c36a5-3532-443e-8538-afdd9296c7da
+
+
 
 <p align="center">
   <a href="./docs/system.md">System overview</a> ·
